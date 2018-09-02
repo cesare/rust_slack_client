@@ -505,8 +505,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "slack_client"
 version = "0.1.0"
 dependencies = [
+ "futures 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.12.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper-tls 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
