@@ -1,15 +1,23 @@
 extern crate futures;
+extern crate http;
 extern crate hyper;
 extern crate hyper_tls;
+extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
 use std::env;
 
 use futures::{future, Future};
+use http::Response;
 use hyper::{Client, Uri};
 use hyper_tls::HttpsConnector;
 use url::form_urlencoded::Serializer;
+
+fn show_response_body(response: Response<hyper::Body>) {
+    let body = response.body();
+    println!("{:?}", body);
+}
 
 fn create_query_string(token: &String) -> String {
     Serializer::new(String::new()).append_pair("token", token).finish()
@@ -34,7 +42,7 @@ fn main() {
         let token = find_token();
         let uri = create_authentication_uri(token);
         client.get(uri)
-            .map(|response| println!("{:?}", response))
+            .map(|response| show_response_body(response))
             .map_err(|error| println!("{:?}", error))
     }));
 }
