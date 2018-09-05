@@ -9,14 +9,20 @@ extern crate url;
 use std::env;
 
 use futures::{future, Future};
-use http::Response;
-use hyper::{Client, Uri};
+use hyper::{Body, Client, Uri};
+use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
 use url::form_urlencoded::Serializer;
 
-fn show_response_body(response: Response<hyper::Body>) {
-    let body = response.body();
-    println!("{:?}", body);
+fn show_response_body(body: Body) {
+    let result = body.concat2().wait();
+    match result {
+        Ok(payload) => {
+            let json: Result<serde_json::Value, serde_json::Error> = serde_json::from_slice(&payload.into_bytes());
+            println!("{:?}", json)
+        }
+        _ => println!("Failed to parse response body")
+    }
 }
 
 fn create_query_string(token: &String) -> String {
@@ -37,12 +43,12 @@ fn main() {
     tokio::run(future::lazy(|| {
         let https = HttpsConnector::new(4).expect("TLS initialization failed");
         let client = Client::builder()
-            .build::<_, hyper::Body>(https);
+            .build::<_, Body>(https);
 
         let token = find_token();
         let uri = create_authentication_uri(token);
         client.get(uri)
-            .map(|response| show_response_body(response))
+            .map(|response| show_response_body(response.into_body()))
             .map_err(|error| println!("{:?}", error))
     }));
 }
