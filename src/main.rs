@@ -12,13 +12,14 @@ use futures::{future, Future};
 use hyper::{Body, Client, Uri};
 use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
+use serde_json::{Value, Error};
 use url::form_urlencoded::Serializer;
 
 fn show_response_body(body: Body) {
     let result = body.concat2().wait();
     match result {
         Ok(payload) => {
-            let json: Result<serde_json::Value, serde_json::Error> = serde_json::from_slice(&payload.into_bytes());
+            let json: Result<Value, Error> = serde_json::from_slice(&payload.into_bytes());
             println!("{:?}", json)
         }
         _ => println!("Failed to parse response body")
