@@ -6,20 +6,45 @@ extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
+#[macro_use]
+extern crate serde_derive;
+
 use std::env;
 
 use futures::{future, Future};
 use hyper::{Body, Client, Uri};
 use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
-use serde_json::{Value, Error};
+use serde_json::Error;
 use url::form_urlencoded::Serializer;
+
+#[derive(Deserialize, Debug)]
+struct Identity {
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Team {
+    domain: String,
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Authenticated {
+    ok: bool,
+    #[serde(rename = "self")]
+    identity: Identity,
+    team: Team,
+    url: String,
+}
 
 fn show_response_body(body: Body) {
     let result = body.concat2().wait();
     match result {
         Ok(payload) => {
-            let json: Result<Value, Error> = serde_json::from_slice(&payload.into_bytes());
+            let json: Result<Authenticated, Error> = serde_json::from_slice(&payload.into_bytes());
             println!("{:?}", json)
         }
         _ => println!("Failed to parse response body")
