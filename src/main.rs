@@ -15,7 +15,6 @@ use futures::{future, Future};
 use hyper::{Body, Client, Uri};
 use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
-use serde_json::Error;
 use url::form_urlencoded::Serializer;
 
 #[derive(Deserialize, Debug)]
@@ -41,14 +40,9 @@ struct Authenticated {
 }
 
 fn show_response_body(body: Body) {
-    let result = body.concat2().wait();
-    match result {
-        Ok(payload) => {
-            let json: Result<Authenticated, Error> = serde_json::from_slice(&payload.into_bytes());
-            println!("{:?}", json)
-        }
-        _ => println!("Failed to parse response body")
-    }
+    let _result = body.concat2().wait()
+        .map(|payload| println!("{:?}", serde_json::from_slice::<Authenticated>(&payload.into_bytes())))
+        .map_err(|error| println!("Failed to parse response body: {}", error));
 }
 
 fn create_query_string(token: &String) -> String {
