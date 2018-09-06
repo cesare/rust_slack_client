@@ -12,6 +12,7 @@ extern crate serde_derive;
 use std::env;
 
 use futures::{future, Future};
+use http::Response;
 use hyper::{Body, Client, Uri};
 use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
@@ -39,9 +40,19 @@ struct Authenticated {
     url: String,
 }
 
-fn show_response_body(body: Body) {
+fn show_response_body(body: &[u8]) {
+    let json = parse_response_body(body);
+    println!("{:?}", json);
+}
+
+fn parse_response_body(body: &[u8]) -> Result<Authenticated, serde_json::Error> {
+    serde_json::from_slice::<Authenticated>(body)
+}
+
+fn show_response(response: Response<Body>) {
+    let body = response.into_body();
     let _result = body.concat2().wait()
-        .map(|payload| println!("{:?}", serde_json::from_slice::<Authenticated>(&payload.into_bytes())))
+        .map(|payload| show_response_body(&payload.into_bytes()))
         .map_err(|error| println!("Failed to parse response body: {}", error));
 }
 
@@ -68,7 +79,7 @@ fn main() {
         let token = find_token();
         let uri = create_authentication_uri(token);
         client.get(uri)
-            .map(|response| show_response_body(response.into_body()))
+            .map(|response| show_response(response))
             .map_err(|error| println!("{:?}", error))
     }));
 }
