@@ -40,20 +40,31 @@ struct Authenticated {
     url: String,
 }
 
-fn show_response_body(body: &[u8]) {
-    let json = parse_response_body(body);
-    println!("{:?}", json);
+#[derive(Debug)]
+struct Error {
 }
 
-fn parse_response_body(body: &[u8]) -> Result<Authenticated, serde_json::Error> {
-    serde_json::from_slice::<Authenticated>(body)
+impl From<serde_json::Error> for Error {
+    fn from(_e: serde_json::Error) -> Self {
+        Error {}
+    }
+}
+
+impl From<hyper::Error> for Error {
+    fn from(_e: hyper::Error) -> Self {
+        Error {}
+    }
+}
+
+fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
+    let body = response.into_body().concat2().wait()?;
+    serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|e| Error::from(e))
 }
 
 fn show_response(response: Response<Body>) {
-    let body = response.into_body();
-    let _result = body.concat2().wait()
-        .map(|payload| show_response_body(&payload.into_bytes()))
-        .map_err(|error| println!("Failed to parse response body: {}", error));
+    let _ = parse_response(response)
+        .map(|body| println!("{:?}", body))
+        .map_err(|error| println!("{:?}", error));
 }
 
 fn create_query_string(token: &String) -> String {
