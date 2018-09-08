@@ -81,12 +81,15 @@ fn find_token() -> String {
     env::var("SLACK_TOKEN").unwrap_or_else(|_error| panic!("SLACK_TOKEN missing")).clone()
 }
 
+type HttpClient = Client<HttpsConnector<hyper::client::HttpConnector>>;
+fn create_client() -> HttpClient {
+    let https = HttpsConnector::new(4).expect("TLS initialization failed");
+    Client::builder().build::<_, Body>(https)
+}
+
 fn main() {
     tokio::run(future::lazy(|| {
-        let https = HttpsConnector::new(4).expect("TLS initialization failed");
-        let client = Client::builder()
-            .build::<_, Body>(https);
-
+        let client = create_client();
         let token = find_token();
         let uri = create_authentication_uri(token);
         client.get(uri)
