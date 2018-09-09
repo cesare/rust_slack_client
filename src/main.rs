@@ -71,8 +71,10 @@ fn create_authentication_uri(token: String) -> Uri {
     url_string.parse::<Uri>().unwrap()
 }
 
-fn find_token() -> String {
-    env::var("SLACK_TOKEN").unwrap_or_else(|_error| panic!("SLACK_TOKEN missing")).clone()
+fn find_token() -> Result<String, Error> {
+    env::var("SLACK_TOKEN")
+        .map(|value| value.clone())
+        .map_err(|_e| Error {})
 }
 
 type HttpClient = Client<HttpsConnector<hyper::client::HttpConnector>>;
@@ -84,7 +86,7 @@ fn create_client() -> Result<HttpClient, Error> {
 
 fn authenticate() -> Result<Authenticated, Error> {
     let client = create_client()?;
-    let token = find_token();
+    let token = find_token()?;
     let uri = create_authentication_uri(token);
     let response = client.get(uri).wait()?;
     parse_response(response)
