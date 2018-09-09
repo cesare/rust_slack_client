@@ -61,12 +61,6 @@ fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
     serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|e| Error::from(e))
 }
 
-fn show_response(response: Response<Body>) {
-    let _ = parse_response(response)
-        .map(|body| println!("{:?}", body))
-        .map_err(|error| println!("{:?}", error));
-}
-
 fn create_query_string(token: &String) -> String {
     Serializer::new(String::new()).append_pair("token", token).finish()
 }
@@ -87,13 +81,18 @@ fn create_client() -> HttpClient {
     Client::builder().build::<_, Body>(https)
 }
 
+fn authenticate() -> Result<Authenticated, Error> {
+    let client = create_client();
+    let token = find_token();
+    let uri = create_authentication_uri(token);
+    let response = client.get(uri).wait()?;
+    parse_response(response)
+}
+
 fn main() {
     tokio::run(future::lazy(|| {
-        let client = create_client();
-        let token = find_token();
-        let uri = create_authentication_uri(token);
-        client.get(uri)
-            .map(|response| show_response(response))
+        authenticate()
+            .map(|authenticated| println!("{:?}", authenticated))
             .map_err(|error| println!("{:?}", error))
     }));
 }
