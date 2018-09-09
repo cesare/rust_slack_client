@@ -76,13 +76,14 @@ fn find_token() -> String {
 }
 
 type HttpClient = Client<HttpsConnector<hyper::client::HttpConnector>>;
-fn create_client() -> HttpClient {
-    let https = HttpsConnector::new(4).expect("TLS initialization failed");
-    Client::builder().build::<_, Body>(https)
+fn create_client() -> Result<HttpClient, Error> {
+    HttpsConnector::new(4)
+        .map(|https| Client::builder().build::<_, Body>(https))
+        .map_err(|_error| Error {})
 }
 
 fn authenticate() -> Result<Authenticated, Error> {
-    let client = create_client();
+    let client = create_client()?;
     let token = find_token();
     let uri = create_authentication_uri(token);
     let response = client.get(uri).wait()?;
