@@ -41,24 +41,27 @@ struct Authenticated {
 }
 
 #[derive(Debug)]
-struct Error {
+enum Error {
+    TokenMissing,
+    ParseJsonFailed,
+    HttpFailed,
 }
 
 impl From<serde_json::Error> for Error {
     fn from(_e: serde_json::Error) -> Self {
-        Error {}
+        Error::ParseJsonFailed
     }
 }
 
 impl From<hyper::Error> for Error {
     fn from(_e: hyper::Error) -> Self {
-        Error {}
+        Error::HttpFailed
     }
 }
 
 fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
     let body = response.into_body().concat2().wait()?;
-    serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|e| Error::from(e))
+    serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
 }
 
 fn create_query_string(token: &String) -> String {
@@ -74,14 +77,14 @@ fn create_authentication_uri(token: String) -> Uri {
 fn find_token() -> Result<String, Error> {
     env::var("SLACK_TOKEN")
         .map(|value| value.clone())
-        .map_err(|_e| Error {})
+        .map_err(|_e| Error::TokenMissing)
 }
 
 type HttpClient = Client<HttpsConnector<hyper::client::HttpConnector>>;
 fn create_client() -> Result<HttpClient, Error> {
     HttpsConnector::new(4)
         .map(|https| Client::builder().build::<_, Body>(https))
-        .map_err(|_error| Error {})
+        .map_err(|_error| Error::HttpFailed)
 }
 
 fn authenticate(client: &HttpClient) -> Result<Authenticated, Error> {
