@@ -84,18 +84,21 @@ fn create_client() -> Result<HttpClient, Error> {
         .map_err(|_error| Error {})
 }
 
-fn authenticate() -> Result<Authenticated, Error> {
-    let client = create_client()?;
+fn authenticate(client: &HttpClient) -> Result<Authenticated, Error> {
     let token = find_token()?;
     let uri = create_authentication_uri(token);
     let response = client.get(uri).wait()?;
     parse_response(response)
 }
 
+fn start() -> Result<(), Error> {
+    let client = create_client()?;
+    authenticate(&client)
+        .map(|authenticated| println!("{:?}", authenticated))
+}
+
 fn main() {
     tokio::run(future::lazy(|| {
-        authenticate()
-            .map(|authenticated| println!("{:?}", authenticated))
-            .map_err(|error| println!("{:?}", error))
+        start().map_err(|error| println!("{:?}", error))
     }));
 }
