@@ -59,6 +59,12 @@ impl From<hyper::Error> for Error {
     }
 }
 
+fn connect_websocket(url: &String) -> Result<(), Error> {
+    let client = create_client()?;
+    let _future = client.get(url.parse::<Uri>().unwrap());
+    Ok(())
+}
+
 fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
     let body = response.into_body().concat2().wait()?;
     serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
@@ -96,8 +102,8 @@ fn authenticate(client: &HttpClient) -> Result<Authenticated, Error> {
 
 fn start() -> Result<(), Error> {
     let client = create_client()?;
-    authenticate(&client)
-        .map(|authenticated| println!("{:?}", authenticated))
+    let authenticated = authenticate(&client)?;
+    connect_websocket(&authenticated.url)
 }
 
 fn main() {
