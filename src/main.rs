@@ -60,9 +60,21 @@ impl From<hyper::Error> for Error {
 }
 
 fn connect_websocket(url: &String) -> Result<(), Error> {
+    println!("connecting: {}", url);
     let client = create_client()?;
-    let _future = client.get(url.parse::<Uri>().unwrap());
-    Ok(())
+    let uri = url.parse::<Uri>().unwrap();
+
+    client.get(uri)
+        .and_then(|response| {
+            println!("{:?}", response);
+            response.into_body().on_upgrade()
+        })
+        .map(|upgraded| {
+            let _ = tokio::io::read_to_end(upgraded, Vec::new())
+                .map(|(_upgraded, vec)| println!("{:?}", std::str::from_utf8(&vec)));
+        })
+        .map_err(|_error| Error::HttpFailed)
+        .wait()
 }
 
 fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
