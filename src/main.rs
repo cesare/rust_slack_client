@@ -13,7 +13,8 @@ use std::env;
 
 use futures::{future, Future};
 use http::Response;
-use hyper::{Body, Client, Uri};
+use hyper::{Body, Client, Request, Uri};
+use hyper::header::{CONNECTION, UPGRADE};
 use hyper::rt::Stream;
 use hyper_tls::HttpsConnector;
 use url::form_urlencoded::Serializer;
@@ -62,9 +63,14 @@ impl From<hyper::Error> for Error {
 fn connect_websocket(url: &String) -> Result<(), Error> {
     println!("connecting: {}", url);
     let client = create_client()?;
-    let uri = url.parse::<Uri>().unwrap();
+    let request = Request::builder()
+        .uri(url)
+        .header(UPGRADE, "websocket")
+        .header(CONNECTION, "Upgrade")
+        .body(Body::empty())
+        .unwrap();
 
-    client.get(uri)
+    client.request(request)
         .and_then(|response| {
             println!("{:?}", response);
             response.into_body().on_upgrade()
