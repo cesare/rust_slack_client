@@ -18,7 +18,7 @@ use hyper::header::{CONNECTION, UPGRADE};
 use hyper::rt::Stream;
 use url::form_urlencoded::Serializer;
 
-use slack_client::*;
+use slack_client::client::*;
 
 #[derive(Deserialize, Debug)]
 struct Identity {
