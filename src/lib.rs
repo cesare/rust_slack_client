@@ -6,4 +6,8 @@ extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
+#[macro_use]
+extern crate serde_derive;
+
+pub mod authentication;
 pub mod client;

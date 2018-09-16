@@ -6,41 +6,14 @@ extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
-#[macro_use]
-extern crate serde_derive;
-
 extern crate slack_client;
 
 use futures::{future, Future};
-use http::Response;
-use hyper::{Body, Request, Uri};
+use hyper::{Body, Request};
 use hyper::header::{CONNECTION, UPGRADE};
-use hyper::rt::Stream;
-use url::form_urlencoded::Serializer;
 
+use slack_client::authentication::*;
 use slack_client::client::*;
-
-#[derive(Deserialize, Debug)]
-struct Identity {
-    id: String,
-    name: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Team {
-    domain: String,
-    id: String,
-    name: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Authenticated {
-    ok: bool,
-    #[serde(rename = "self")]
-    identity: Identity,
-    team: Team,
-    url: String,
-}
 
 fn connect_websocket(url: &String) -> Result<(), Error> {
     println!("connecting: {}", url);
@@ -63,28 +36,6 @@ fn connect_websocket(url: &String) -> Result<(), Error> {
         })
         .map_err(|_error| Error::HttpFailed)
         .wait()
-}
-
-fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
-    let body = response.into_body().concat2().wait()?;
-    serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
-}
-
-fn create_query_string(token: &String) -> String {
-    Serializer::new(String::new()).append_pair("token", token).finish()
-}
-
-fn create_authentication_uri(token: String) -> Uri {
-    let query = create_query_string(&token);
-    let url_string = format!("https://slack.com/api/rtm.connect?{}", query);
-    url_string.parse::<Uri>().unwrap()
-}
-
-fn authenticate(client: &HttpClient) -> Result<Authenticated, Error> {
-    let token = find_token()?;
-    let uri = create_authentication_uri(token);
-    let response = client.get(uri).wait()?;
-    parse_response(response)
 }
 
 fn start() -> Result<(), Error> {
