@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["SAWADA Tadashi <cesare@mayverse.jp>"]
 
 [[bin]]
+name = "list_conversations"
+path = "src/bin/list_conversations.rs"
+
+[[bin]]
 name = "rtm"
 path = "src/bin/rtm.rs"
 
