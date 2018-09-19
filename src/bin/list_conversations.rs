@@ -32,6 +32,10 @@ struct Channel {
     name: String,
 }
 
+fn show_channel(ch: &Channel) {
+    println!("{} {}", ch.id, ch.name);
+}
+
 fn parse_response(response: Response<Body>) -> Result<ListChannelsResponse, Error> {
     let body = response.into_body().concat2().wait()?;
     serde_json::from_slice::<ListChannelsResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
@@ -57,7 +61,10 @@ fn request(client: &HttpClient) -> Result<ListChannelsResponse, Error> {
 fn start() -> Result<(), Error> {
     let client = create_client()?;
     let response = request(&client)?;
-    println!("{:?}", response);
+
+    for ch in &response.channels {
+        show_channel(ch);
+    }
     Ok(())
 }
 
