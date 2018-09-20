@@ -13,6 +13,7 @@ extern crate slack_client;
 
 use futures::future;
 use futures::Future;
+use futures::Async;
 use http::Response;
 use hyper::{Body, Uri};
 use hyper::rt::Stream;
@@ -30,6 +31,27 @@ struct ListChannelsResponse {
 struct Channel {
     id: String,
     name: String,
+}
+
+struct ListChannelsStream {
+    client: HttpClient,
+}
+
+impl ListChannelsStream {
+    fn new(client: HttpClient) -> ListChannelsStream {
+        ListChannelsStream {
+            client: client,
+        }
+    }
+}
+
+impl Stream for ListChannelsStream {
+    type Item = Channel;
+    type Error = Error;
+
+    fn poll(&mut self) -> Result<Async<Option<Channel>>, Error> {
+        Ok(Async::NotReady)
+    }
 }
 
 fn show_channel(ch: &Channel) {
