@@ -25,12 +25,18 @@ use slack_client::client::*;
 struct ListChannelsResponse {
     ok: bool,
     channels: Vec<Channel>,
+    response_metadata: ResponseMetadata,
 }
 
 #[derive(Debug, Deserialize)]
 struct Channel {
     id: String,
     name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ResponseMetadata {
+    next_cursor: String,
 }
 
 struct ListChannelsStream {
