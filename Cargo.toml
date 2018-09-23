@@ -8,6 +8,10 @@ name = "list_conversations"
 path = "src/bin/list_conversations.rs"
 
 [[bin]]
+name = "post_message"
+path = "src/bin/post_message.rs"
+
+[[bin]]
 name = "rtm"
 path = "src/bin/rtm.rs"
 
