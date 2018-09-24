@@ -50,6 +50,22 @@ impl PostMessageRequest {
     }
 }
 
+impl SlackApiRequest for PostMessageRequest {
+    fn path(&self) -> String {
+        "api/chat.postMessage".to_string()
+    }
+}
+
+impl SlackApiPostRequest for PostMessageRequest {
+    fn body(&self) -> String {
+        Serializer::new(String::new())
+            .append_pair("token", &self.token)
+            .append_pair("channel", &self.channel)
+            .append_pair("text", &self.text)
+            .finish()
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct PostMessageResponse {
     ok: bool,
