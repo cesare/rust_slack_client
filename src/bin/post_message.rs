@@ -36,18 +36,6 @@ impl PostMessageRequest {
             text: text,
         }
     }
-
-    fn create_request_uri(&self) -> String {
-        "https://slack.com/api/chat.postMessage".to_string()
-    }
-
-    fn create_request_body(&self) -> String {
-        Serializer::new(String::new())
-            .append_pair("token", &self.token)
-            .append_pair("channel", &self.channel)
-            .append_pair("text", &self.text)
-            .finish()
-    }
 }
 
 impl SlackApiRequest for PostMessageRequest {
@@ -77,26 +65,17 @@ fn parse_response(response: Response<Body>) -> Result<PostMessageResponse, Error
     serde_json::from_slice::<PostMessageResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
 }
 
-fn post_request(client: HttpClient, request: PostMessageRequest) -> Result<(), Error> {
-    let uri = request.create_request_uri();
-    let query = request.create_request_body();
-    let req = Request::post(uri)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(Body::from(query))
-        .unwrap();
-
-    client.request(req)
+fn post_request(client: SlackApiClient, request: PostMessageRequest) -> Result<(), Error> {
+    client.post(&request)
         .map(|response| {
             let response_body = parse_response(response).unwrap();
             println!("{:?}", response_body)
         })
-        .map_err(|_error| Error::HttpFailed)
-        .wait()
 }
 
 fn start(channel: String, text: String) -> Result<(), Error> {
     let token = find_token()?;
-    let client = create_client()?;
+    let client = SlackApiClient::create()?;
     let request = PostMessageRequest::new(token, channel, text);
     post_request(client, request)
 }
