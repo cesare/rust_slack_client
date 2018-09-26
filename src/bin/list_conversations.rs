@@ -15,9 +15,8 @@ use futures::future;
 use futures::Future;
 use futures::Async;
 use http::Response;
-use hyper::{Body, Uri};
+use hyper::Body;
 use hyper::rt::Stream;
-use url::form_urlencoded::Serializer;
 
 use slack_client::client::*;
 
@@ -61,41 +60,24 @@ impl Stream for ListChannelsStream {
 }
 
 struct ListChannelsRequest {
-    client: HttpClient,
-    token: String,
 }
 
 impl ListChannelsRequest {
-    fn new() -> Result<ListChannelsRequest, Error> {
-        let client = create_client()?;
-        let token = find_token()?;
+    fn new() -> ListChannelsRequest {
+        ListChannelsRequest {
+        }
+    }
+}
 
-        let request = ListChannelsRequest {
-            client: client,
-            token: token,
-        };
-        Ok(request)
+impl SlackApiRequest for ListChannelsRequest {
+    fn path(&self) -> String {
+        "api/conversations.list".to_string()
     }
 
-    fn parse_response(&self, response: Response<Body>) -> Result<ListChannelsResponse, Error> {
-        let body = response.into_body().concat2().wait()?;
-        serde_json::from_slice::<ListChannelsResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
-    }
-
-    fn create_query_string(&self) -> String {
-        Serializer::new(String::new()).append_pair("token", &self.token).finish()
-    }
-
-    fn create_request_uri(&self) -> Uri {
-        let query = self.create_query_string();
-        let url_string = format!("https://slack.com/api/conversations.list?{}", query);
-        url_string.parse::<Uri>().unwrap()
-    }
-
-    fn send(&self) -> Result<ListChannelsResponse, Error> {
-        let uri = self.create_request_uri();
-        let response = self.client.get(uri).wait()?;
-        self.parse_response(response)
+    fn query_string(&self) -> Result<Option<String>, Error> {
+        let empty_params: Vec<(String, String)> = vec![];
+        let query = self.create_query_string(empty_params)?;
+        Ok(Some(query))
     }
 }
 
@@ -103,9 +85,16 @@ fn show_channel(ch: &Channel) {
     println!("{} {}", ch.id, ch.name);
 }
 
+fn parse_response(response: Response<Body>) -> Result<ListChannelsResponse, Error> {
+    let body = response.into_body().concat2().wait()?;
+    serde_json::from_slice::<ListChannelsResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
+}
+
 fn start() -> Result<(), Error> {
-    let request = ListChannelsRequest::new()?;
-    let response = request.send()?;
+    let client = SlackApiClient::create()?;
+    let request = ListChannelsRequest::new();
+    let http_response = client.get(&request)?;
+    let response = parse_response(http_response)?;
 
     for ch in &response.channels {
         show_channel(ch);

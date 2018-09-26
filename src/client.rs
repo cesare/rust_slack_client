@@ -1,6 +1,6 @@
 use futures::Future;
 use hyper;
-use hyper::{Body, Client, Request, Response};
+use hyper::{Body, Client, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
 use serde_json;
 use url::form_urlencoded::Serializer;
@@ -45,6 +45,10 @@ pub fn create_client() -> Result<HttpClient, Error> {
 pub trait SlackApiRequest {
     fn path(&self) -> String;
 
+    fn query_string(&self) -> Result<Option<String>, Error> {
+        Ok(None)
+    }
+
     fn find_token(&self) -> Result<String, Error> {
         env::var("SLACK_TOKEN")
             .map(|value| value.clone())
@@ -61,6 +65,9 @@ pub trait SlackApiRequest {
             .finish();
         Ok(query)
     }
+}
+
+pub trait SlackApiGetRequest: SlackApiRequest {
 }
 
 pub trait SlackApiPostRequest: SlackApiRequest {
@@ -85,9 +92,18 @@ impl SlackApiClient {
         Ok(client)
     }
 
+    pub fn get<T>(&self, request: &T) -> Result<Response<Body>, Error>
+        where T: SlackApiRequest
+    {
+        let uri = self.create_uri(request)?;
+        self.http_client.get(uri)
+            .map_err(|_e| Error::HttpFailed)
+            .wait()
+    }
+
     pub fn post<T>(&self, request: &T) -> Result<Response<Body>, Error>
         where T: SlackApiPostRequest {
-        let uri = self.create_uri(request);
+        let uri = self.create_uri(request)?;
         let query = request.body()?;
         let req = Request::post(uri)
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -98,8 +114,14 @@ impl SlackApiClient {
             .wait()
     }
 
-    fn create_uri<R: SlackApiRequest>(&self, request: &R) -> String {
+    fn create_uri<R: SlackApiRequest>(&self, request: &R) -> Result<Uri, Error> {
         let path = request.path();
-        format!("https://slack.com/{}", path)
+        let query_string = request.query_string()?;
+        let uri_string = query_string.map_or_else(
+            || format!("https://slack.com/{}", path),
+            |query| format!("https://slack.com/{}?{}", path, query)
+        );
+        let uri = uri_string.parse::<Uri>().unwrap();
+        Ok(uri)
     }
 }
