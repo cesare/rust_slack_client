@@ -42,10 +42,16 @@ pub fn create_client() -> Result<HttpClient, Error> {
 
 pub trait SlackApiRequest {
     fn path(&self) -> String;
+
+    fn find_token(&self) -> Result<String, Error> {
+        env::var("SLACK_TOKEN")
+            .map(|value| value.clone())
+            .map_err(|_e| Error::TokenMissing)
+    }
 }
 
 pub trait SlackApiPostRequest: SlackApiRequest {
-    fn body(&self) -> String;
+    fn body(&self) -> Result<String, Error>;
 }
 
 pub trait SlackApiResponse {
@@ -69,7 +75,7 @@ impl SlackApiClient {
     pub fn post<T>(&self, request: &T) -> Result<Response<Body>, Error>
         where T: SlackApiPostRequest {
         let uri = self.create_uri(request);
-        let query = request.body();
+        let query = request.body()?;
         let req = Request::post(uri)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(Body::from(query))

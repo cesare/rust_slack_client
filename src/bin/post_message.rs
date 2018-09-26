@@ -14,7 +14,7 @@ extern crate slack_client;
 use futures::future;
 use futures::Future;
 use http::Response;
-use hyper::{Body, Request};
+use hyper::Body;
 use hyper::rt::Stream;
 use url::form_urlencoded::Serializer;
 
@@ -23,15 +23,13 @@ use std::env;
 use slack_client::client::*;
 
 struct PostMessageRequest {
-    token: String,
     channel: String,
     text: String,
 }
 
 impl PostMessageRequest {
-    fn new(token: String, channel: String, text: String) -> PostMessageRequest {
+    fn new(channel: String, text: String) -> PostMessageRequest {
         PostMessageRequest {
-            token: token,
             channel: channel,
             text: text,
         }
@@ -45,12 +43,14 @@ impl SlackApiRequest for PostMessageRequest {
 }
 
 impl SlackApiPostRequest for PostMessageRequest {
-    fn body(&self) -> String {
-        Serializer::new(String::new())
-            .append_pair("token", &self.token)
+    fn body(&self) -> Result<String, Error> {
+        let token = self.find_token()?;
+        let body = Serializer::new(String::new())
+            .append_pair("token", &token)
             .append_pair("channel", &self.channel)
             .append_pair("text", &self.text)
-            .finish()
+            .finish();
+        Ok(body)
     }
 }
 
@@ -74,9 +74,8 @@ fn post_request(client: SlackApiClient, request: PostMessageRequest) -> Result<(
 }
 
 fn start(channel: String, text: String) -> Result<(), Error> {
-    let token = find_token()?;
     let client = SlackApiClient::create()?;
-    let request = PostMessageRequest::new(token, channel, text);
+    let request = PostMessageRequest::new(channel, text);
     post_request(client, request)
 }
 
