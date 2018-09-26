@@ -3,7 +3,9 @@ use hyper;
 use hyper::{Body, Client, Request, Response};
 use hyper_tls::HttpsConnector;
 use serde_json;
+use url::form_urlencoded::Serializer;
 
+use std::borrow::Borrow;
 use std::env;
 
 #[derive(Debug)]
@@ -47,6 +49,17 @@ pub trait SlackApiRequest {
         env::var("SLACK_TOKEN")
             .map(|value| value.clone())
             .map_err(|_e| Error::TokenMissing)
+    }
+
+    fn create_query_string<I, K, V>(&self, params: I) -> Result<String, Error>
+        where I: IntoIterator, I::Item: Borrow<(K, V)>, K: AsRef<str>, V: AsRef<str>
+    {
+        let token = self.find_token()?;
+        let query = Serializer::new(String::new())
+            .append_pair("token", &token)
+            .extend_pairs(params)
+            .finish();
+        Ok(query)
     }
 }
 

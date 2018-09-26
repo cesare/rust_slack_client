@@ -44,13 +44,11 @@ impl SlackApiRequest for PostMessageRequest {
 
 impl SlackApiPostRequest for PostMessageRequest {
     fn body(&self) -> Result<String, Error> {
-        let token = self.find_token()?;
-        let body = Serializer::new(String::new())
-            .append_pair("token", &token)
-            .append_pair("channel", &self.channel)
-            .append_pair("text", &self.text)
-            .finish();
-        Ok(body)
+        let params = vec![
+            ("channel", &self.channel),
+            ("text", &self.text),
+        ];
+        self.create_query_string(params)
     }
 }
 
