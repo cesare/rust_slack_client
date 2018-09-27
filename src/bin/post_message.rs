@@ -16,7 +16,6 @@ use futures::Future;
 use http::Response;
 use hyper::Body;
 use hyper::rt::Stream;
-use url::form_urlencoded::Serializer;
 
 use std::env;
 
