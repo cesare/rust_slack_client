@@ -72,18 +72,12 @@ struct PostMessage {
     error: Option<String>,
 }
 
-fn post_request(client: SlackApiClient, request: PostMessageRequest) -> Result<(), Error> {
-    client.post(&request)
-        .map(|response: PostMessageResponse| {
-            // let response_body = parse_response(response).unwrap();
-            println!("{:?}", response.body)
-        })
-}
-
 fn start(channel: String, text: String) -> Result<(), Error> {
     let client = SlackApiClient::create()?;
     let request = PostMessageRequest::new(channel, text);
-    post_request(client, request)
+    let response: PostMessageResponse = client.post(&request)?;
+    println!("{:?}", response.body);
+    Ok(())
 }
 
 fn main() {
