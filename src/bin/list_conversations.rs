@@ -20,8 +20,23 @@ use hyper::rt::Stream;
 
 use slack_client::client::*;
 
-#[derive(Debug, Deserialize)]
 struct ListChannelsResponse {
+    body: ListChannels,
+}
+
+impl SlackApiResponse for ListChannelsResponse {
+    fn create(response: Response<Body>) -> Result<Self, Error> {
+        let body = response.into_body().concat2().wait()?;
+        let parsed = serde_json::from_slice::<ListChannels>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)?;
+        let result = ListChannelsResponse {
+            body:parsed,
+        };
+        Ok(result)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct ListChannels {
     ok: bool,
     channels: Vec<Channel>,
     response_metadata: ResponseMetadata,
@@ -85,18 +100,12 @@ fn show_channel(ch: &Channel) {
     println!("{} {}", ch.id, ch.name);
 }
 
-fn parse_response(response: Response<Body>) -> Result<ListChannelsResponse, Error> {
-    let body = response.into_body().concat2().wait()?;
-    serde_json::from_slice::<ListChannelsResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
-}
-
 fn start() -> Result<(), Error> {
     let client = SlackApiClient::create()?;
     let request = ListChannelsRequest::new();
-    let http_response = client.get(&request)?;
-    let response = parse_response(http_response)?;
+    let response: ListChannelsResponse = client.get2(&request)?;
 
-    for ch in &response.channels {
+    for ch in &response.body.channels {
         show_channel(ch);
     }
     Ok(())

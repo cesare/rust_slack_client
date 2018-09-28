@@ -1,12 +1,15 @@
 use futures::Future;
+use futures::Stream;
 use hyper;
 use hyper::{Body, Client, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
+use serde::Deserialize;
 use serde_json;
 use url::form_urlencoded::Serializer;
 
 use std::borrow::Borrow;
 use std::env;
+use std::marker::Sized;
 
 #[derive(Debug)]
 pub enum Error {
@@ -75,7 +78,10 @@ pub trait SlackApiPostRequest: SlackApiRequest {
 }
 
 pub trait SlackApiResponse {
-
+    // type Item;
+    //fn body(&self) -> &Self::Item;
+    fn create(response: Response<Body>) -> Result<Self, Error> where Self: Sized;
+    // fn parse_response(&self, response: Response<Body>) -> Result<Self::Item, Error>;
 }
 
 pub struct SlackApiClient {
@@ -99,6 +105,16 @@ impl SlackApiClient {
         self.http_client.get(uri)
             .map_err(|_e| Error::HttpFailed)
             .wait()
+    }
+
+    pub fn get2<T, S>(&self, request: &T) -> Result<S, Error>
+        where T: SlackApiRequest, S: SlackApiResponse
+    {
+        let uri = self.create_uri(request)?;
+        let response = self.http_client.get(uri)
+            .map_err(|_e| Error::HttpFailed)
+            .wait()?;
+        S::create(response)
     }
 
     pub fn post<T>(&self, request: &T) -> Result<Response<Body>, Error>
