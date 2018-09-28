@@ -103,7 +103,7 @@ fn show_channel(ch: &Channel) {
 fn start() -> Result<(), Error> {
     let client = SlackApiClient::create()?;
     let request = ListChannelsRequest::new();
-    let response: ListChannelsResponse = client.get2(&request)?;
+    let response: ListChannelsResponse = client.get(&request)?;
 
     for ch in &response.body.channels {
         show_channel(ch);

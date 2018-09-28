@@ -66,5 +66,5 @@ pub struct Authenticated {
 
 pub fn authenticate(client: &SlackApiClient) -> Result<AuthenticationResponse, Error> {
     let request = AuthenticationRequest::new();
-    client.get2(&request)
+    client.get(&request)
 }

@@ -98,16 +98,7 @@ impl SlackApiClient {
         Ok(client)
     }
 
-    pub fn get<T>(&self, request: &T) -> Result<Response<Body>, Error>
-        where T: SlackApiRequest
-    {
-        let uri = self.create_uri(request)?;
-        self.http_client.get(uri)
-            .map_err(|_e| Error::HttpFailed)
-            .wait()
-    }
-
-    pub fn get2<T, S>(&self, request: &T) -> Result<S, Error>
+    pub fn get<T, S>(&self, request: &T) -> Result<S, Error>
         where T: SlackApiRequest, S: SlackApiResponse
     {
         let uri = self.create_uri(request)?;
