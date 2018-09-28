@@ -16,8 +16,8 @@ use slack_client::client::*;
 
 fn start() -> Result<(), Error> {
     let client = SlackApiClient::create()?;
-    let authenticated = authenticate(&client)?;
-    println!("{:?}", authenticated);
+    let response = authenticate(&client)?;
+    println!("{:?}", response.body);
     Ok(())
 }
 

@@ -27,6 +27,20 @@ impl SlackApiRequest for AuthenticationRequest {
     }
 }
 
+pub struct AuthenticationResponse {
+    pub body: Authenticated,
+}
+
+impl SlackApiResponse for AuthenticationResponse {
+    fn create(response: Response<Body>) -> Result<Self, Error> {
+        let body = response.into_body().concat2().wait()?;
+        let parsed = serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)?;
+        let result = AuthenticationResponse {
+            body:parsed,
+        };
+        Ok(result)
+    }
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Identity {
@@ -50,13 +64,7 @@ pub struct Authenticated {
     pub url: String,
 }
 
-fn parse_response(response: Response<Body>) -> Result<Authenticated, Error> {
-    let body = response.into_body().concat2().wait()?;
-    serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
-}
-
-pub fn authenticate(client: &SlackApiClient) -> Result<Authenticated, Error> {
+pub fn authenticate(client: &SlackApiClient) -> Result<AuthenticationResponse, Error> {
     let request = AuthenticationRequest::new();
-    let response = client.get(&request)?;
-    parse_response(response)
+    client.get2(&request)
 }

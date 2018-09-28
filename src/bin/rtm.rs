@@ -40,8 +40,8 @@ fn connect_websocket(url: &String) -> Result<(), Error> {
 
 fn start() -> Result<(), Error> {
     let client = SlackApiClient::create()?;
-    let authenticated = authenticate(&client)?;
-    connect_websocket(&authenticated.url)
+    let response = authenticate(&client)?;
+    connect_websocket(&response.body.url)
 }
 
 fn main() {
