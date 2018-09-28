@@ -76,10 +76,7 @@ pub trait SlackApiPostRequest: SlackApiRequest {
 }
 
 pub trait SlackApiResponse {
-    // type Item;
-    //fn body(&self) -> &Self::Item;
     fn create(response: Response<Body>) -> Result<Self, Error> where Self: Sized;
-    // fn parse_response(&self, response: Response<Body>) -> Result<Self::Item, Error>;
 }
 
 pub struct SlackApiClient {
