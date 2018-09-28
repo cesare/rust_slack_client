@@ -1,9 +1,7 @@
 use futures::Future;
-use futures::Stream;
 use hyper;
 use hyper::{Body, Client, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
-use serde::Deserialize;
 use serde_json;
 use url::form_urlencoded::Serializer;
 
