@@ -51,22 +51,32 @@ impl SlackApiPostRequest for PostMessageRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
 struct PostMessageResponse {
+    body: PostMessage,
+}
+
+impl SlackApiResponse for PostMessageResponse {
+    fn create(response: Response<Body>) -> Result<Self, Error> {
+        let body = response.into_body().concat2().wait()?;
+        let parsed = serde_json::from_slice::<PostMessage>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)?;
+        let result = PostMessageResponse {
+            body: parsed,
+        };
+        Ok(result)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct PostMessage {
     ok: bool,
     error: Option<String>,
 }
 
-fn parse_response(response: Response<Body>) -> Result<PostMessageResponse, Error> {
-    let body = response.into_body().concat2().wait()?;
-    serde_json::from_slice::<PostMessageResponse>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)
-}
-
 fn post_request(client: SlackApiClient, request: PostMessageRequest) -> Result<(), Error> {
     client.post(&request)
-        .map(|response| {
-            let response_body = parse_response(response).unwrap();
-            println!("{:?}", response_body)
+        .map(|response: PostMessageResponse| {
+            // let response_body = parse_response(response).unwrap();
+            println!("{:?}", response.body)
         })
 }
 

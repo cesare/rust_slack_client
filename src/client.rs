@@ -108,17 +108,18 @@ impl SlackApiClient {
         S::create(response)
     }
 
-    pub fn post<T>(&self, request: &T) -> Result<Response<Body>, Error>
-        where T: SlackApiPostRequest {
+    pub fn post<T, S>(&self, request: &T) -> Result<S, Error>
+        where T: SlackApiPostRequest, S: SlackApiResponse {
         let uri = self.create_uri(request)?;
         let query = request.body()?;
         let req = Request::post(uri)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(Body::from(query))
             .unwrap();
-        self.http_client.request(req)
+        let response = self.http_client.request(req)
             .map_err(|_e| Error::HttpFailed)
-            .wait()
+            .wait()?;
+        S::create(response)
     }
 
     fn create_uri<R: SlackApiRequest>(&self, request: &R) -> Result<Uri, Error> {
