@@ -12,13 +12,13 @@ use std::marker::Sized;
 #[derive(Debug)]
 pub enum Error {
     TokenMissing,
-    ParseJsonFailed,
+    ParseJsonFailed(String),
     HttpFailed,
 }
 
 impl From<serde_json::Error> for Error {
-    fn from(_e: serde_json::Error) -> Self {
-        Error::ParseJsonFailed
+    fn from(e: serde_json::Error) -> Self {
+        Error::ParseJsonFailed(format!("{}", e))
     }
 }
 

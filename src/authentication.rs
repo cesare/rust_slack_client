@@ -34,7 +34,7 @@ pub struct AuthenticationResponse {
 impl SlackApiResponse for AuthenticationResponse {
     fn create(response: Response<Body>) -> Result<Self, Error> {
         let body = response.into_body().concat2().wait()?;
-        let parsed = serde_json::from_slice::<Authenticated>(&body.into_bytes()).map_err(|_e| Error::ParseJsonFailed)?;
+        let parsed = serde_json::from_slice::<Authenticated>(&body.into_bytes())?;
         let result = AuthenticationResponse {
             body:parsed,
         };
