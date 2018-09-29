@@ -34,7 +34,7 @@ fn connect_websocket(url: &String) -> Result<(), Error> {
             let _ = tokio::io::read_to_end(upgraded, Vec::new())
                 .map(|(_upgraded, vec)| println!("{:?}", std::str::from_utf8(&vec)));
         })
-        .map_err(|_error| Error::HttpFailed)
+        .map_err(|e| Error::HttpFailed(format!("{}", e)))
         .wait()
 }
 

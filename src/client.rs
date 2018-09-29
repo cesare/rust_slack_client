@@ -13,7 +13,7 @@ use std::marker::Sized;
 pub enum Error {
     TokenMissing,
     ParseJsonFailed(String),
-    HttpFailed,
+    HttpFailed(String),
 }
 
 impl From<serde_json::Error> for Error {
@@ -23,8 +23,8 @@ impl From<serde_json::Error> for Error {
 }
 
 impl From<hyper::Error> for Error {
-    fn from(_e: hyper::Error) -> Self {
-        Error::HttpFailed
+    fn from(e: hyper::Error) -> Self {
+        Error::HttpFailed(format!("{}", e))
     }
 }
 
@@ -40,7 +40,7 @@ pub fn find_token() -> Result<String, Error> {
 pub fn create_client() -> Result<HttpClient, Error> {
     HttpsConnector::new(4)
         .map(|https| Client::builder().build::<_, Body>(https))
-        .map_err(|_error| Error::HttpFailed)
+        .map_err(|e| Error::HttpFailed(format!("{}", e)))
 }
 
 pub trait SlackApiRequest {
@@ -98,7 +98,6 @@ impl SlackApiClient {
     {
         let uri = self.create_uri(request)?;
         let response = self.http_client.get(uri)
-            .map_err(|_e| Error::HttpFailed)
             .wait()?;
         S::create(response)
     }
@@ -112,7 +111,6 @@ impl SlackApiClient {
             .body(Body::from(query))
             .unwrap();
         let response = self.http_client.request(req)
-            .map_err(|_e| Error::HttpFailed)
             .wait()?;
         S::create(response)
     }
