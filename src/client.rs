@@ -31,12 +31,6 @@ impl From<hyper::Error> for Error {
 
 pub type HttpClient = Client<HttpsConnector<hyper::client::HttpConnector>>;
 
-pub fn find_token() -> Result<String, Error> {
-    env::var("SLACK_TOKEN")
-        .map(|value| value.clone())
-        .map_err(|_e| Error::TokenMissing)
-}
-
 pub fn create_client() -> Result<HttpClient, Error> {
     HttpsConnector::new(4)
         .map(|https| Client::builder().build::<_, Body>(https))
