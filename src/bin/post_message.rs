@@ -20,6 +20,7 @@ use hyper::rt::Stream;
 use std::env;
 
 use slack_client::client::*;
+use slack_client::error::Error;
 
 struct PostMessageRequest {
     channel: String,

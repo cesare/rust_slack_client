@@ -6,6 +6,8 @@ use serde_json;
 
 use client::*;
 
+use error::Error;
+
 pub struct AuthenticationRequest {
 }
 

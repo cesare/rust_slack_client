@@ -12,3 +12,4 @@ extern crate serde_derive;
 
 pub mod authentication;
 pub mod client;
+pub mod error;

@@ -14,6 +14,7 @@ use hyper::header::{CONNECTION, UPGRADE};
 
 use slack_client::authentication::*;
 use slack_client::client::*;
+use slack_client::error::Error;
 
 fn connect_websocket(url: &String) -> Result<(), Error> {
     println!("connecting: {}", url);

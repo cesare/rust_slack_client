@@ -19,6 +19,7 @@ use hyper::Body;
 use hyper::rt::Stream;
 
 use slack_client::client::*;
+use slack_client::error::Error;
 
 struct ListChannelsResponse {
     body: ListChannels,
