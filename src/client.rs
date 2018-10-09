@@ -2,7 +2,6 @@ use futures::Future;
 use hyper;
 use hyper::{Body, Client, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
-use serde_json;
 use url::form_urlencoded::Serializer;
 
 use std::borrow::Borrow;

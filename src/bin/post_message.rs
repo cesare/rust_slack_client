@@ -6,72 +6,15 @@ extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
-#[macro_use]
-extern crate serde_derive;
-
 extern crate slack_client;
 
 use futures::future;
-use futures::Future;
-use http::Response;
-use hyper::Body;
-use hyper::rt::Stream;
 
 use std::env;
 
 use slack_client::client::*;
 use slack_client::error::Error;
-
-struct PostMessageRequest {
-    channel: String,
-    text: String,
-}
-
-impl PostMessageRequest {
-    fn new(channel: String, text: String) -> PostMessageRequest {
-        PostMessageRequest {
-            channel: channel,
-            text: text,
-        }
-    }
-}
-
-impl SlackApiRequest for PostMessageRequest {
-    fn path(&self) -> String {
-        "api/chat.postMessage".to_string()
-    }
-}
-
-impl SlackApiPostRequest for PostMessageRequest {
-    fn body(&self) -> Result<String, Error> {
-        let params = vec![
-            ("channel", &self.channel),
-            ("text", &self.text),
-        ];
-        self.create_query_string(params)
-    }
-}
-
-struct PostMessageResponse {
-    body: PostMessage,
-}
-
-impl SlackApiResponse for PostMessageResponse {
-    fn create(response: Response<Body>) -> Result<Self, Error> {
-        let body = response.into_body().concat2().wait()?;
-        let parsed = serde_json::from_slice::<PostMessage>(&body.into_bytes())?;
-        let result = PostMessageResponse {
-            body: parsed,
-        };
-        Ok(result)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct PostMessage {
-    ok: bool,
-    error: Option<String>,
-}
+use slack_client::message::*;
 
 fn start(channel: String, text: String) -> Result<(), Error> {
     let client = SlackApiClient::create()?;
