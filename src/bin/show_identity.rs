@@ -1,8 +1,6 @@
-use futures::stream::StreamExt;
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
 use hyper::client::HttpConnector;
-use tokio::io::AsyncWriteExt;
 
 fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new();
@@ -26,9 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut response = client.request(request).await?;
     let body = response.body_mut();
-    while let Some(bytes) = body.next().await {
-        tokio::io::stdout().write_all(&bytes?).await?;
-    }
+    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
+    let json: serde_json::Value = serde_json::from_slice(bytes.as_ref())?;
+    println!("{}", json);
 
     Ok(())
 }
