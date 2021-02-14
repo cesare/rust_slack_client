@@ -5,18 +5,6 @@ authors = ["SAWADA Tadashi <cesare@mayverse.jp>"]
 edition = "2018"
 
 [[bin]]
-name = "list_conversations"
-path = "src/bin/list_conversations.rs"
-
-[[bin]]
-name = "post_message"
-path = "src/bin/post_message.rs"
-
-[[bin]]
-name = "rtm"
-path = "src/bin/rtm.rs"
-
-[[bin]]
 name = "show_identity"
 path = "src/bin/show_identity.rs"
 
