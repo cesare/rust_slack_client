@@ -1,6 +1,19 @@
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
 use hyper::client::HttpConnector;
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct AuthTest {
+    ok: bool,
+    user: String,
+    user_id: String,
+    team: String,
+    team_id: String,
+    bot_id: String,
+    url: String,
+    is_enterprise_install: bool,
+}
 
 fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new();
@@ -25,8 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut response = client.request(request).await?;
     let body = response.body_mut();
     let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
-    let json: serde_json::Value = serde_json::from_slice(bytes.as_ref())?;
-    println!("{}", json);
+    let auth_test: AuthTest = serde_json::from_slice(bytes.as_ref())?;
+    println!("{:?}", auth_test);
 
     Ok(())
 }
