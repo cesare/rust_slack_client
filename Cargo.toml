@@ -11,7 +11,7 @@ path = "src/bin/show_identity.rs"
 [dependencies]
 futures = "~0.3.12"
 http = "~0.2.3"
-hyper = "~0.14.4"
+hyper = { version = "~0.14.4", features = ["client", "http1", "runtime", "stream", "tcp"] }
 hyper-tls = "~0.5.0"
 serde = "1.0.76"
 serde_derive = "1.0.76"
