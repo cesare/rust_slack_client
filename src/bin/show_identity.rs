@@ -1,5 +1,7 @@
+use futures::stream::StreamExt;
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
+use tokio::io::AsyncWriteExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -14,7 +16,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .header("Authorization", format!("Bearer {}", slack_token))
         .body(Body::empty())?;
 
-    let response = client.request(request).await?;
-    println!("{:?}", response);
+    let mut response = client.request(request).await?;
+    let body = response.body_mut();
+    while let Some(bytes) = body.next().await {
+        tokio::io::stdout().write_all(&bytes?).await?;
+    }
+
     Ok(())
 }
