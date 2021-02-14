@@ -9,17 +9,20 @@ fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     Client::builder().build::<_, hyper::Body>(https)
 }
 
+fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
+    Request::builder()
+        .method("POST")
+        .uri("https://slack.com/api/auth.test")
+        .header("Authorization", format!("Bearer {}", slack_token))
+        .body(Body::empty())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
     let client = create_client();
-
-    let request = Request::builder()
-        .method("POST")
-        .uri("https://slack.com/api/auth.test")
-        .header("Authorization", format!("Bearer {}", slack_token))
-        .body(Body::empty())?;
+    let request = create_request(&slack_token)?;
 
     let mut response = client.request(request).await?;
     let body = response.body_mut();
