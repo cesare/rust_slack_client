@@ -8,6 +8,10 @@ edition = "2018"
 name = "show_identity"
 path = "src/bin/show_identity.rs"
 
+[[bin]]
+name = "list_conversations"
+path = "src/bin/list_conversations.rs"
+
 [dependencies]
 futures = "~0.3.12"
 http = "~0.2.3"
