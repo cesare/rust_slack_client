@@ -22,7 +22,7 @@ struct Purpose {
 struct Channel {
     id: String,
     name: String,
-    num_members: u32,
+    num_members: Option<u32>,
     is_private: bool,
     topic: Topic,
     purpose: Purpose,
@@ -39,11 +39,16 @@ fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
 }
 
 fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
+    let query = form_urlencoded::Serializer::new(String::new())
+        .append_pair("types", "public_channel,private_channel")
+        .finish();
+
     Request::builder()
-        .method("GET")
+        .method("POST")
         .uri("https://slack.com/api/conversations.list")
         .header("Authorization", format!("Bearer {}", slack_token))
-        .body(Body::empty())
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(query.into())
 }
 
 #[tokio::main]
