@@ -23,6 +23,7 @@ path = "src/bin/rtm.rs"
 [dependencies]
 form_urlencoded = "~1.0.0"
 futures = "~0.3.12"
+futures-util = "~0.3.12"
 http = "~0.2.3"
 hyper = { version = "~0.14.4", features = ["client", "http1", "runtime", "stream", "tcp"] }
 hyper-tls = "~0.5.0"
@@ -30,5 +31,5 @@ serde = { version = "1.0.76", features = ["derive"] }
 serde_json = "1.0.26"
 tokio = { version = "~1.2.0", features = ["full"] }
 tungstenite = "~0.13.0"
-tokio-tungstenite = "~0.13.0"
+tokio-tungstenite = { version = "~0.13.0", features = ["tls"] }
 url = "~2.2.0"

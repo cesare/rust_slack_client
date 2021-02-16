@@ -762,6 +762,7 @@ version = "0.1.0"
 dependencies = [
  "form_urlencoded",
  "futures",
+ "futures-util",
  "http",
  "hyper",
  "hyper-tls",
@@ -899,8 +900,10 @@ checksum = "e1a5f475f1b9d077ea1017ecbc60890fda8e54942d680ca0b1d2b47cfa2d861b"
 dependencies = [
  "futures-util",
  "log",
+ "native-tls",
  "pin-project",
  "tokio",
+ "tokio-native-tls",
  "tungstenite 0.12.0",
 ]
 
@@ -949,6 +952,7 @@ dependencies = [
  "httparse",
  "input_buffer",
  "log",
+ "native-tls",
  "rand",
  "sha-1",
  "url",
