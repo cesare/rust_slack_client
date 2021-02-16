@@ -1,52 +1,40 @@
-extern crate futures;
-extern crate http;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate serde_json;
-extern crate tokio;
-extern crate url;
+use hyper_tls::HttpsConnector;
+use hyper::{Body, Client, Request};
+use hyper::client::HttpConnector;
+use serde_json::Value;
 
-extern crate slack_client;
-
-use futures::{future, Future};
-use hyper::{Body, Request};
-use hyper::header::{CONNECTION, UPGRADE};
-
-use slack_client::authentication::*;
-use slack_client::client::*;
-use slack_client::error::Error;
-
-fn connect_websocket(url: &String) -> Result<(), Error> {
-    println!("connecting: {}", url);
-    let client = create_client()?;
-    let request = Request::builder()
-        .uri(url)
-        .header(UPGRADE, "websocket")
-        .header(CONNECTION, "Upgrade")
-        .body(Body::empty())
-        .unwrap();
-
-    client.request(request)
-        .and_then(|response| {
-            println!("{:?}", response);
-            response.into_body().on_upgrade()
-        })
-        .map(|upgraded| {
-            let _ = tokio::io::read_to_end(upgraded, Vec::new())
-                .map(|(_upgraded, vec)| println!("{:?}", std::str::from_utf8(&vec)));
-        })
-        .map_err(|e| Error::HttpFailed(format!("{}", e)))
-        .wait()
+fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
+    let https = HttpsConnector::new();
+    Client::builder().build::<_, hyper::Body>(https)
 }
 
-fn start() -> Result<(), Error> {
-    let client = SlackApiClient::create()?;
-    let response = authenticate(&client)?;
-    connect_websocket(&response.body.url)
+fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
+    let query = form_urlencoded::Serializer::new(String::new())
+        .append_pair("batch_presence_aware", "1")
+        .append_pair("presence_sub", "1")
+        .finish();
+
+    Request::builder()
+        .method("POST")
+        .uri("https://slack.com/api/rtm.connect")
+        .header("Authorization", format!("Bearer {}", slack_token))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(query.into())
 }
 
-fn main() {
-    tokio::run(future::lazy(|| {
-        start().map_err(|error| println!("{:?}", error))
-    }));
+#[tokio:: main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let slack_token = std::env::var("SLACK_TOKEN")?;
+
+    let client = create_client();
+    let request = create_request(&slack_token)?;
+
+    let mut response = client.request(request).await?;
+    let body = response.body_mut();
+    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
+
+    let json: Value = serde_json::from_slice(bytes.as_ref())?;
+    println!("{:?}", json);
+
+    Ok(())
 }
