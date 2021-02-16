@@ -1,3 +1,4 @@
+use futures_util::stream::StreamExt;
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
 use hyper::client::HttpConnector;
@@ -56,6 +57,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let rtm_connect: RtmConnect = serde_json::from_slice(bytes.as_ref())?;
     println!("{:?}", rtm_connect);
+
+    let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
+    while let Some(message) = stream.next().await {
+        println!("{:?}", message);
+    }
 
     Ok(())
 }
