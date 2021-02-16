@@ -1,7 +1,28 @@
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
 use hyper::client::HttpConnector;
-use serde_json::Value;
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+struct Identity {
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Team {
+    domain: String,
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct RtmConnect {
+    #[serde(rename = "self")]
+    identity: Identity,
+    team: Team,
+    url: String,
+}
 
 fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new();
@@ -33,8 +54,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let body = response.body_mut();
     let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
 
-    let json: Value = serde_json::from_slice(bytes.as_ref())?;
-    println!("{:?}", json);
+    let rtm_connect: RtmConnect = serde_json::from_slice(bytes.as_ref())?;
+    println!("{:?}", rtm_connect);
 
     Ok(())
 }
