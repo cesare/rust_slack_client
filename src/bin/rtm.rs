@@ -3,6 +3,8 @@ use hyper_tls::HttpsConnector;
 use hyper::{Body, Client, Request};
 use hyper::client::HttpConnector;
 use serde::Deserialize;
+use serde_json::Value;
+use tokio_tungstenite::tungstenite::Message;
 
 #[derive(Deserialize, Debug)]
 struct Identity {
@@ -59,8 +61,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:?}", rtm_connect);
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
-    while let Some(message) = stream.next().await {
-        println!("{:?}", message);
+    while let Some(Ok(message)) = stream.next().await {
+        match message {
+            Message::Text(text) => {
+                let json: Value = serde_json::from_str(&text)?;
+                println!("{}", json);
+            }
+            _ => {
+                println!("Non-text message: {:?}", message);
+            }
+        }
     }
 
     Ok(())
