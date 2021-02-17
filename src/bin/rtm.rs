@@ -6,6 +6,8 @@ use serde::Deserialize;
 use serde_json::Value;
 use tokio_tungstenite::tungstenite::Message;
 
+mod events;
+
 #[derive(Deserialize, Debug)]
 struct Identity {
     id: String,
@@ -65,7 +67,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match message {
             Message::Text(text) => {
                 let json: Value = serde_json::from_str(&text)?;
-                println!("{}", json);
+                let original_json = json.clone();
+                if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
+                    println!("{:?}", msg);
+                } else {
+                    println!("{}", original_json);
+                }
             }
             _ => {
                 println!("Non-text message: {:?}", message);
