@@ -1,7 +1,7 @@
-use hyper_tls::HttpsConnector;
-use hyper::{Body, Client, Request};
-use hyper::client::HttpConnector;
+use hyper::{Body, Request};
 use serde::Deserialize;
+
+mod client;
 
 #[derive(Debug, Deserialize)]
 struct AuthTest {
@@ -13,11 +13,6 @@ struct AuthTest {
     bot_id: String,
     url: String,
     is_enterprise_install: bool,
-}
-
-fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
-    let https = HttpsConnector::new();
-    Client::builder().build::<_, hyper::Body>(https)
 }
 
 fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
@@ -32,7 +27,7 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
-    let client = create_client();
+    let client = client::create_client();
     let request = create_request(&slack_token)?;
 
     let mut response = client.request(request).await?;

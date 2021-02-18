@@ -1,14 +1,9 @@
-use hyper_tls::HttpsConnector;
-use hyper::{Body, Client, Request};
-use hyper::client::HttpConnector;
+use hyper::{Body, Request};
 use serde_json::Value;
 
 use std::env;
 
-fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
-    let https = HttpsConnector::new();
-    Client::builder().build::<_, hyper::Body>(https)
-}
+mod client;
 
 fn create_request(slack_token: &str, channel: &str, text: &str) -> Result<Request<Body>, hyper::http::Error> {
     let query = form_urlencoded::Serializer::new(String::new())
@@ -32,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
-    let client = create_client();
+    let client = client::create_client();
     let request = create_request(&slack_token, channel, text)?;
 
     let mut response = client.request(request).await?;

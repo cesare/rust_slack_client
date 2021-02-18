@@ -1,8 +1,8 @@
-use hyper_tls::HttpsConnector;
-use hyper::{Body, Client, Request};
-use hyper::client::HttpConnector;
+use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
+
+mod client;
 
 #[derive(Debug, Deserialize)]
 struct Topic {
@@ -33,11 +33,6 @@ struct Channels {
     channels: Vec<Channel>,
 }
 
-fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
-    let https = HttpsConnector::new();
-    Client::builder().build::<_, hyper::Body>(https)
-}
-
 fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
     let query = form_urlencoded::Serializer::new(String::new())
         .append_pair("types", "public_channel,private_channel")
@@ -55,7 +50,7 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
-    let client = create_client();
+    let client = client::create_client();
     let request = create_request(&slack_token)?;
 
     let mut response = client.request(request).await?;
