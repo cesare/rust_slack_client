@@ -42,21 +42,7 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
         .body(query.into())
 }
 
-#[tokio:: main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let slack_token = std::env::var("SLACK_TOKEN")?;
-
-    let client = client::create_client();
-    let request = create_request(&slack_token)?;
-
-    let mut response = client.request(request).await?;
-    let body = response.body_mut();
-    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
-
-    let rtm_connect: RtmConnect = serde_json::from_slice(bytes.as_ref())?;
-    println!("{:?}", rtm_connect);
-
-    let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
+async fn wait_for_events(stream: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::stream::Stream<tokio::net::TcpStream, hyper_tls::TlsStream<tokio::net::TcpStream>>>) -> Result<(), Box<dyn std::error::Error>> {
     while let Some(Ok(message)) = stream.next().await {
         match message {
             Message::Text(text) => {
@@ -73,6 +59,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
+
+    Ok(())
+}
+
+#[tokio:: main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let slack_token = std::env::var("SLACK_TOKEN")?;
+
+    let client = client::create_client();
+    let request = create_request(&slack_token)?;
+
+    let mut response = client.request(request).await?;
+    let body = response.body_mut();
+    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
+
+    let rtm_connect: RtmConnect = serde_json::from_slice(bytes.as_ref())?;
+    println!("{:?}", rtm_connect);
+
+    let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
+    wait_for_events(&mut stream).await?;
 
     Ok(())
 }
