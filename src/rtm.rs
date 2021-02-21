@@ -1,4 +1,4 @@
-use futures_util::stream::StreamExt;
+use futures_util::stream::TryStreamExt;
 use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
@@ -43,7 +43,7 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
 }
 
 async fn wait_for_events(stream: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::stream::Stream<tokio::net::TcpStream, hyper_tls::TlsStream<tokio::net::TcpStream>>>) -> Result<(), Box<dyn std::error::Error>> {
-    while let Some(Ok(message)) = stream.next().await {
+    while let Some(message) = stream.try_next().await? {
         match message {
             Message::Text(text) => {
                 let json: Value = serde_json::from_str(&text)?;
