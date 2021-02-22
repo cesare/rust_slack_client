@@ -42,20 +42,12 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
         .body(query.into())
 }
 
-async fn wait_for_events(stream: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::stream::Stream<tokio::net::TcpStream, hyper_tls::TlsStream<tokio::net::TcpStream>>>) -> Result<(), Box<dyn std::error::Error>> {
+async fn wait_for_messages(stream: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::stream::Stream<tokio::net::TcpStream, hyper_tls::TlsStream<tokio::net::TcpStream>>>) -> Result<(), Box<dyn std::error::Error>> {
     while let Some(Ok(message)) = stream.next().await {
-        match message {
-            Message::Text(text) => {
-                let json: Value = serde_json::from_str(&text)?;
-                let original_json = json.clone();
-                if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
-                    println!("{:?}", msg);
-                } else {
-                    println!("{}", original_json);
-                }
-            }
-            _ => {
-                println!("Non-text message: {:?}", message);
+        if let Message::Text(text) = message {
+            let json: Value = serde_json::from_str(&text)?;
+            if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
+                println!("{:?}", msg);
             }
         }
     }
@@ -78,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:?}", rtm_connect);
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
-    wait_for_events(&mut stream).await?;
+    wait_for_messages(&mut stream).await?;
 
     Ok(())
 }
