@@ -1,4 +1,4 @@
-use futures_util::stream::StreamExt;
+use futures::stream::StreamExt;
 use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
