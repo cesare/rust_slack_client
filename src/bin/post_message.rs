@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use std::env;
 
-mod client;
+use slack_client::client;
 
 fn create_request(slack_token: &str, channel: &str, text: &str) -> Result<Request<Body>, hyper::http::Error> {
     let query = form_urlencoded::Serializer::new(String::new())

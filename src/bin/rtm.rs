@@ -1,12 +1,12 @@
-use futures::stream::{Stream, StreamExt};
+use futures::stream::{Stream, TryStreamExt};
 use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
 use tokio_tungstenite::tungstenite::Error as WsError;
 use tokio_tungstenite::tungstenite::Message;
 
-mod client;
-mod events;
+use slack_client::client;
+use slack_client::events;
 
 #[derive(Deserialize, Debug)]
 struct Identity {
@@ -43,12 +43,20 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
         .body(query.into())
 }
 
-async fn wait_for_messages(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) -> Result<(), Box<dyn std::error::Error>> {
-    while let Some(Ok(message)) = stream.next().await {
-        if let Message::Text(text) = message {
-            let json: Value = serde_json::from_str(&text)?;
-            if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
-                println!("{:?}", msg);
+async fn wait_for_events(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) -> Result<(), Box<dyn std::error::Error>> {
+    while let Some(message) = stream.try_next().await? {
+        match message {
+            Message::Text(text) => {
+                let json: Value = serde_json::from_str(&text)?;
+                let original_json = json.clone();
+                if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
+                    println!("{:?}", msg);
+                } else {
+                    println!("{}", original_json);
+                }
+            }
+            _ => {
+                println!("Non-text message: {:?}", message);
             }
         }
     }
@@ -71,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:?}", rtm_connect);
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
-    wait_for_messages(&mut stream).await?;
+    wait_for_events(&mut stream).await?;
 
     Ok(())
 }

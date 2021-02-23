@@ -1,7 +1,7 @@
 use hyper::{Body, Request};
 use serde::Deserialize;
 
-mod client;
+use slack_client::client;
 
 #[derive(Debug, Deserialize)]
 struct AuthTest {

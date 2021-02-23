@@ -4,26 +4,6 @@ version = "0.1.0"
 authors = ["SAWADA Tadashi <cesare@mayverse.jp>"]
 edition = "2018"
 
-[[bin]]
-name = "show_identity"
-path = "src/show_identity.rs"
-
-[[bin]]
-name = "list_conversations"
-path = "src/list_conversations.rs"
-
-[[bin]]
-name = "post_message"
-path = "src/post_message.rs"
-
-[[bin]]
-name = "rtm"
-path = "src/rtm.rs"
-
-[[bin]]
-name = "bot"
-path = "src/bot.rs"
-
 [dependencies]
 form_urlencoded = "~1.0.0"
 futures = "~0.3.12"

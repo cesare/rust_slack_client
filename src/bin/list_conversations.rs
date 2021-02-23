@@ -2,7 +2,7 @@ use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
 
-mod client;
+use slack_client::client;
 
 #[derive(Debug, Deserialize)]
 struct Topic {
