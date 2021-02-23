@@ -1,7 +1,8 @@
-use futures::stream::StreamExt;
+use futures::stream::{Stream, StreamExt};
 use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
+use tokio_tungstenite::tungstenite::Error as WsError;
 use tokio_tungstenite::tungstenite::Message;
 
 mod client;
@@ -42,7 +43,7 @@ fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error
         .body(query.into())
 }
 
-async fn wait_for_messages(stream: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::stream::Stream<tokio::net::TcpStream, hyper_tls::TlsStream<tokio::net::TcpStream>>>) -> Result<(), Box<dyn std::error::Error>> {
+async fn wait_for_messages(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) -> Result<(), Box<dyn std::error::Error>> {
     while let Some(Ok(message)) = stream.next().await {
         if let Message::Text(text) = message {
             let json: Value = serde_json::from_str(&text)?;
