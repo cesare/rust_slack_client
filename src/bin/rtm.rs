@@ -1,3 +1,4 @@
+use anyhow::Result;
 use futures::stream::{Stream, TryStreamExt};
 use hyper::{Body, Request};
 use serde::Deserialize;
@@ -29,21 +30,22 @@ struct RtmConnect {
     url: String,
 }
 
-fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
+fn create_request(slack_token: &str) -> Result<Request<Body>> {
     let query = form_urlencoded::Serializer::new(String::new())
         .append_pair("batch_presence_aware", "1")
         .append_pair("presence_sub", "1")
         .finish();
 
-    Request::builder()
+    let request = Request::builder()
         .method("POST")
         .uri("https://slack.com/api/rtm.connect")
         .header("Authorization", format!("Bearer {}", slack_token))
         .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(query.into())
+        .body(query.into())?;
+    Ok(request)
 }
 
-async fn wait_for_events(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) -> Result<(), Box<dyn std::error::Error>> {
+async fn wait_for_events(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) -> Result<()> {
     while let Some(message) = stream.try_next().await? {
         match message {
             Message::Text(text) => {
@@ -65,7 +67,7 @@ async fn wait_for_events(stream: &mut (dyn Stream<Item = Result<Message, WsError
 }
 
 #[tokio:: main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
     let client = client::create_client();

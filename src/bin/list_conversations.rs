@@ -1,3 +1,4 @@
+use anyhow::Result;
 use hyper::{Body, Request};
 use serde::Deserialize;
 use serde_json::Value;
@@ -33,21 +34,22 @@ struct Channels {
     channels: Vec<Channel>,
 }
 
-fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
+fn create_request(slack_token: &str) -> Result<Request<Body>> {
     let query = form_urlencoded::Serializer::new(String::new())
         .append_pair("types", "public_channel,private_channel")
         .finish();
 
-    Request::builder()
+    let request = Request::builder()
         .method("POST")
         .uri("https://slack.com/api/conversations.list")
         .header("Authorization", format!("Bearer {}", slack_token))
         .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(query.into())
+        .body(query.into())?;
+    Ok(request)
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
     let client = client::create_client();

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use hyper::{Body, Request};
 use serde::Deserialize;
 
@@ -15,16 +16,17 @@ struct AuthTest {
     is_enterprise_install: bool,
 }
 
-fn create_request(slack_token: &str) -> Result<Request<Body>, hyper::http::Error> {
-    Request::builder()
+fn create_request(slack_token: &str) -> Result<Request<Body>> {
+    let request = Request::builder()
         .method("POST")
         .uri("https://slack.com/api/auth.test")
         .header("Authorization", format!("Bearer {}", slack_token))
-        .body(Body::empty())
+        .body(Body::empty())?;
+    Ok(request)
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let slack_token = std::env::var("SLACK_TOKEN")?;
 
     let client = client::create_client();
