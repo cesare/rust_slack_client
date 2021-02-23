@@ -1,25 +1,10 @@
 use anyhow::Result;
-use hyper::{Body, Request};
 use serde_json::Value;
 
 use std::env;
 
-use slack_client::client;
-
-fn create_request(slack_token: &str, channel: &str, text: &str) -> Result<Request<Body>> {
-    let query = form_urlencoded::Serializer::new(String::new())
-        .append_pair("channel", channel)
-        .append_pair("text", text)
-        .finish();
-
-    let request = Request::builder()
-        .method("POST")
-        .uri("https://slack.com/api/chat.postMessage")
-        .header("Authorization", format!("Bearer {}", slack_token))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(query.into())?;
-    Ok(request)
-}
+use slack_client::client::SlackApiClient;
+use slack_client::requests::PostMessageRequest;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -27,12 +12,10 @@ async fn main() -> Result<()> {
     let channel = &args[1];
     let text = &args[2];
 
-    let slack_token = std::env::var("SLACK_TOKEN")?;
+    let client = SlackApiClient::new();
+    let request = PostMessageRequest::new(channel, text);
 
-    let client = client::create_client();
-    let request = create_request(&slack_token, channel, text)?;
-
-    let mut response = client.request(request).await?;
+    let mut response = client.request(&request).await?;
     let body = response.body_mut();
     let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
 
