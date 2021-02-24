@@ -1,5 +1,4 @@
 use anyhow::Result;
-use serde_json::Value;
 
 use std::env;
 
@@ -15,11 +14,7 @@ async fn main() -> Result<()> {
     let client = SlackApiClient::new();
     let request = PostMessageRequest::new(channel, text);
 
-    let mut response = client.request(&request).await?;
-    let body = response.body_mut();
-    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
-
-    let json: Value = serde_json::from_slice(bytes.as_ref())?;
+    let json = client.request(&request).await?;
     println!("{:?}", json);
 
     Ok(())

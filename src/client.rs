@@ -1,7 +1,8 @@
 use anyhow::Result;
 use hyper_tls::HttpsConnector;
-use hyper::{Body, Client, Response};
+use hyper::{Body, Client};
 use hyper::client::HttpConnector;
+use serde_json::Value;
 
 use crate::requests::SlackApiRequest;
 
@@ -23,9 +24,12 @@ impl SlackApiClient {
         }
     }
 
-    pub async fn request<T>(&self, request: &T) -> Result<Response<Body>>  where T: SlackApiRequest {
+    pub async fn request<T>(&self, request: &T) -> Result<Value>  where T: SlackApiRequest {
         let http_request = request.build()?;
-        let response = self.http_client.request(http_request).await?;
-        Ok(response)
+        let mut response = self.http_client.request(http_request).await?;
+        let body = response.body_mut();
+        let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
+        let json: Value = serde_json::from_slice(bytes.as_ref())?;
+        Ok(json)
     }
 }

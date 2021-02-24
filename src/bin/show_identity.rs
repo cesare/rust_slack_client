@@ -21,10 +21,8 @@ async fn main() -> Result<()> {
     let client = SlackApiClient::new();
     let request = AuthTestRequest::new();
 
-    let mut response = client.request(&request).await?;
-    let body = response.body_mut();
-    let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
-    let auth_test: AuthTest = serde_json::from_slice(bytes.as_ref())?;
+    let json = client.request(&request).await?;
+    let auth_test: AuthTest = serde_json::from_value(json)?;
     println!("{:?}", auth_test);
 
     Ok(())
