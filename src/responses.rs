@@ -16,4 +16,13 @@ pub struct AuthTest {
 pub struct PostMessage {
     channel: String,
     ts: String,
+    message: BotMessage,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BotMessage {
+    text: String,
+    username: String,
+    bot_id: String,
+    ts: String,
 }
