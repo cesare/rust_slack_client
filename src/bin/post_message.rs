@@ -15,8 +15,7 @@ async fn main() -> Result<()> {
     let client = SlackApiClient::new();
     let request = PostMessageRequest::new(channel, text);
 
-    let json = client.request(&request).await?;
-    let post_message: PostMessage = serde_json::from_value(json)?;
+    let post_message: PostMessage = client.request(&request).await?;
     println!("{:?}", post_message);
 
     Ok(())

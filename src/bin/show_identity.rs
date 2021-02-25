@@ -9,8 +9,7 @@ async fn main() -> Result<()> {
     let client = SlackApiClient::new();
     let request = AuthTestRequest::new();
 
-    let json = client.request(&request).await?;
-    let auth_test: AuthTest = serde_json::from_value(json)?;
+    let auth_test: AuthTest = client.request(&request).await?;
     println!("{:?}", auth_test);
 
     Ok(())
