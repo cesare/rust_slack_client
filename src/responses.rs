@@ -26,3 +26,24 @@ pub struct BotMessage {
     bot_id: String,
     ts: String,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct Identity {
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Team {
+    domain: String,
+    id: String,
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RtmConnect {
+    #[serde(rename = "self")]
+    identity: Identity,
+    team: Team,
+    pub url: String,
+}

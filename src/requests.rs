@@ -59,3 +59,31 @@ impl SlackApiRequest for PostMessageRequest {
         Ok(request)
     }
 }
+
+pub struct RtmConnectRequest {
+}
+
+impl RtmConnectRequest {
+    pub fn new() -> Self {
+        RtmConnectRequest {}
+    }
+}
+
+impl SlackApiRequest for RtmConnectRequest {
+    fn build(&self) -> Result<Request<Body>> {
+        let slack_token = std::env::var("SLACK_TOKEN")?;
+
+        let query = form_urlencoded::Serializer::new(String::new())
+            .append_pair("batch_presence_aware", "1")
+            .append_pair("presence_sub", "1")
+            .finish();
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("https://slack.com/api/rtm.connect")
+            .header("Authorization", format!("Bearer {}", slack_token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(query.into())?;
+        Ok(request)
+    }
+}
