@@ -11,3 +11,9 @@ pub struct AuthTest {
     url: String,
     is_enterprise_install: bool,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct PostMessage {
+    channel: String,
+    ts: String,
+}

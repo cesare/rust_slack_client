@@ -4,6 +4,7 @@ use std::env;
 
 use slack_client::client::SlackApiClient;
 use slack_client::requests::PostMessageRequest;
+use slack_client::responses::PostMessage;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,7 +16,8 @@ async fn main() -> Result<()> {
     let request = PostMessageRequest::new(channel, text);
 
     let json = client.request(&request).await?;
-    println!("{:?}", json);
+    let post_message: PostMessage = serde_json::from_value(json)?;
+    println!("{:?}", post_message);
 
     Ok(())
 }
