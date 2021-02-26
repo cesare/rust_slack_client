@@ -8,7 +8,7 @@ use slack_client::events;
 use slack_client::requests::RtmConnectRequest;
 use slack_client::responses::RtmConnect;
 
-async fn wait_for_messages(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin)) {
+async fn wait_for_messages(stream: &mut (dyn Stream<Item = Result<Message, WsError>> + Unpin + Send)) {
     while let Some(Ok(message)) = stream.next().await {
         if let Message::Text(text) = message {
             if let Ok(msg) = serde_json::from_str::<events::Message>(&text) {
@@ -27,7 +27,11 @@ async fn main() -> Result<()> {
     println!("{:?}", rtm_connect);
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
-    wait_for_messages(&mut stream).await;
 
+    let handle = tokio::spawn(async move {
+        wait_for_messages(&mut stream).await
+    });
+
+    handle.await?;
     Ok(())
 }
