@@ -39,9 +39,9 @@ impl SlackApiClient {
             }
             Some(Value::Bool(false)) => {
                 let error: ErrorResponse = serde_json::from_value(json)?;
-                Err(anyhow!(error.error))
+                Err(anyhow!("Request failed: {}", error.error))
             }
-            _ => Err(anyhow!("unknown error"))
+            _ => Err(anyhow!("unknown error: {:?}", json))
         }
     }
 }
