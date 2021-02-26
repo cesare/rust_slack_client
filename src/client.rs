@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use hyper_tls::HttpsConnector;
 use hyper::{Body, Client};
 use hyper::client::HttpConnector;
@@ -6,6 +6,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 
 use crate::requests::SlackApiRequest;
+use crate::responses::ErrorResponse;
 
 pub fn create_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new();
@@ -31,7 +32,16 @@ impl SlackApiClient {
         let body = response.body_mut();
         let bytes: hyper::body::Bytes = hyper::body::to_bytes(body).await?;
         let json: Value = serde_json::from_slice(bytes.as_ref())?;
-        let result: S = serde_json::from_value(json)?;
-        Ok(result)
+        match json.get("ok") {
+            Some(Value::Bool(true)) => {
+                let result: S = serde_json::from_value(json)?;
+                Ok(result)
+            }
+            Some(Value::Bool(false)) => {
+                let error: ErrorResponse = serde_json::from_value(json)?;
+                Err(anyhow!(error.error))
+            }
+            _ => Err(anyhow!("unknown error"))
+        }
     }
 }

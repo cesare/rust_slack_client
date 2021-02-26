@@ -1,6 +1,11 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+pub struct ErrorResponse {
+    pub error: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct AuthTest {
     ok: bool,
     user: String,
