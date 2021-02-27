@@ -27,6 +27,33 @@ impl SlackApiRequest for AuthTestRequest {
     }
 }
 
+pub struct ListConversationsRequest {
+}
+
+impl ListConversationsRequest {
+    pub fn new() -> Self {
+        ListConversationsRequest {}
+    }
+}
+
+impl SlackApiRequest for ListConversationsRequest {
+    fn build(&self) -> Result<Request<Body>> {
+        let slack_token = std::env::var("SLACK_TOKEN")?;
+
+        let query = form_urlencoded::Serializer::new(String::new())
+            .append_pair("types", "public_channel,private_channel")
+            .finish();
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("https://slack.com/api/conversations.list")
+            .header("Authorization", format!("Bearer {}", slack_token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(query.into())?;
+        Ok(request)
+    }
+}
+
 pub struct PostMessageRequest {
     channel: String,
     text: String,

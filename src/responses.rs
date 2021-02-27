@@ -18,6 +18,35 @@ pub struct AuthTest {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Topic {
+    value: String,
+    creator: String,
+    last_set: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Purpose {
+    value: String,
+    creator: String,
+    last_set: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Channel {
+    id: String,
+    name: String,
+    num_members: Option<u32>,
+    is_private: bool,
+    topic: Topic,
+    purpose: Purpose,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Channels {
+    channels: Vec<Channel>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct PostMessage {
     channel: String,
     ts: String,
