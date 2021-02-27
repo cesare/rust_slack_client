@@ -9,7 +9,9 @@ use slack_client::events::Message;
 use slack_client::requests::RtmConnectRequest;
 use slack_client::responses::RtmConnect;
 
-async fn wait_for_messages(stream: &mut (dyn Stream<Item = Result<WsMessage, WsError>> + Unpin + Send), tx: &mut Sender<Message>) {
+async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Message>)
+    where S: Stream<Item = Result<WsMessage, WsError>> + Unpin + Send
+{
     while let Some(Ok(message)) = stream.next().await {
         if let WsMessage::Text(text) = message {
             if let Ok(msg) = serde_json::from_str::<Message>(&text) {
