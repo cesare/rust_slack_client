@@ -6,8 +6,22 @@ use tokio_tungstenite::tungstenite::Message as WsMessage;
 
 use slack_client::client::SlackApiClient;
 use slack_client::events::Message;
-use slack_client::requests::RtmConnectRequest;
+use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
+
+async fn handle_message(msg: &Message) -> Result<()> {
+    match msg {
+        Message::Message { channel, text, ..} => {
+            if text == "ping" {
+                let client = SlackApiClient::new();
+                let request = PostMessageRequest::new(channel, "pong");
+                client.request(&request).await?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
 
 async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Message>)
     where S: Stream<Item = Result<WsMessage, WsError>> + Unpin + Send
@@ -38,6 +52,7 @@ async fn main() -> Result<()> {
 
     while let Some(msg) = rx.recv().await {
         println!("{:?}", msg);
+        let _ = handle_message(&msg).await;
     }
 
     handle.await?;
