@@ -45,17 +45,18 @@ async fn main() -> Result<()> {
     println!("{:?}", rtm_connect);
 
     let (mut tx, mut rx) = channel::<Message>(100);
+    let msg_handle = tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            println!("{:?}", msg);
+            let _ = handle_message(&msg).await;
+        }
+    });
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
-    let handle = tokio::spawn(async move {
+    let ws_handle = tokio::spawn(async move {
         wait_for_messages(&mut stream, &mut tx).await
     });
 
-    while let Some(msg) = rx.recv().await {
-        println!("{:?}", msg);
-        let _ = handle_message(&msg).await;
-    }
-
-    handle.await?;
+    let (_, _) = tokio::join!(msg_handle, ws_handle);
     Ok(())
 }
