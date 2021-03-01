@@ -11,10 +11,11 @@ use slack_client::responses::RtmConnect;
 
 async fn handle_message(msg: &Message) -> Result<()> {
     match msg {
-        Message::Message { channel, text, ..} => {
+        Message::Message { channel, user, text, ..} => {
             if text == "ping" {
                 let client = SlackApiClient::new();
-                let request = PostMessageRequest::new(channel, "pong");
+                let reply = format!("<@{}> pong", user);
+                let request = PostMessageRequest::new(channel, &reply);
                 client.request(&request).await?;
             }
         }
