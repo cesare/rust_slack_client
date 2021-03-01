@@ -36,7 +36,7 @@ async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Message>)
     }
 }
 
-#[tokio:: main]
+#[tokio::main]
 async fn main() -> Result<()> {
     let client = SlackApiClient::new();
     let request = RtmConnectRequest::new();
