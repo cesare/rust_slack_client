@@ -1,5 +1,6 @@
 use anyhow::Result;
 use futures::stream::{Stream, StreamExt};
+use regex::Regex;
 use tokio::sync::Mutex;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio_tungstenite::tungstenite::Error as WsError;
@@ -32,7 +33,8 @@ impl MessageListener {
     async fn handle_message(&self, msg: &Message) -> Result<()> {
         match msg {
             Message::Message { channel, user, text, ..} => {
-                if text == "ping" {
+                let pattern = Regex::new(r"\bping\b")?;
+                if pattern.is_match(text) {
                     let client = SlackApiClient::new();
                     let reply = format!("<@{}> pong", user);
                     let request = PostMessageRequest::new(channel, &reply);
