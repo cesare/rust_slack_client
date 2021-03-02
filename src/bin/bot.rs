@@ -10,13 +10,13 @@ use slack_client::events::Message;
 use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
 
-struct MessageHandler {
+struct MessageListener {
     rx: Mutex<Receiver<Message>>,
 }
 
-impl MessageHandler {
+impl MessageListener {
     fn new(rx: Receiver<Message>) -> Self {
-        MessageHandler {
+        MessageListener {
             rx: Mutex::new(rx),
         }
     }
@@ -67,7 +67,7 @@ async fn main() -> Result<()> {
 
     let (mut tx, rx) = channel::<Message>(100);
     let msg_handle = tokio::spawn(async move {
-        MessageHandler::new(rx).run().await;
+        MessageListener::new(rx).run().await;
     });
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
