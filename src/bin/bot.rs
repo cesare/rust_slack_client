@@ -1,4 +1,5 @@
 use anyhow::Result;
+use async_trait::async_trait;
 use futures::stream::{Stream, StreamExt};
 use regex::Regex;
 use tokio::sync::Mutex;
@@ -10,6 +11,39 @@ use slack_client::client::SlackApiClient;
 use slack_client::events::Message;
 use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
+
+#[async_trait]
+trait MessageHandler {
+    fn matches(&self, text: &str) -> bool;
+    async fn handle(&self, channel: &str, user: &str, text: &str) -> Result<()>;
+}
+
+struct PingMessageHandler {
+    pattern: Regex,
+}
+
+impl PingMessageHandler {
+    fn new() -> Self {
+        PingMessageHandler {
+            pattern: Regex::new(r"\bping\b").unwrap(),
+        }
+    }
+}
+
+#[async_trait]
+impl MessageHandler for PingMessageHandler {
+    fn matches(&self, text: &str) -> bool {
+        self.pattern.is_match(text)
+    }
+
+    async fn handle(&self, channel: &str, user: &str, _text: &str) -> Result<()> {
+        let client = SlackApiClient::new();
+        let reply = format!("<@{}> pong", user);
+        let request = PostMessageRequest::new(channel, &reply);
+        client.request(&request).await?;
+        Ok(())
+    }
+}
 
 struct MessageListener {
     rx: Mutex<Receiver<Message>>,
@@ -33,12 +67,9 @@ impl MessageListener {
     async fn handle_message(&self, msg: &Message) -> Result<()> {
         match msg {
             Message::Message { channel, user, text, ..} => {
-                let pattern = Regex::new(r"\bping\b")?;
-                if pattern.is_match(text) {
-                    let client = SlackApiClient::new();
-                    let reply = format!("<@{}> pong", user);
-                    let request = PostMessageRequest::new(channel, &reply);
-                    client.request(&request).await?;
+                let ping_handler = PingMessageHandler::new();
+                if ping_handler.matches(&text) {
+                    ping_handler.handle(&channel, &user, &text).await?;
                 }
             }
             _ => {}
