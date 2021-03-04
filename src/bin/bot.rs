@@ -47,12 +47,14 @@ impl MessageHandler for PingMessageHandler {
 
 struct MessageListener {
     rx: Mutex<Receiver<Message>>,
+    ping_handler: PingMessageHandler,
 }
 
 impl MessageListener {
     fn new(rx: Receiver<Message>) -> Self {
         MessageListener {
             rx: Mutex::new(rx),
+            ping_handler: PingMessageHandler::new(),
         }
     }
 
@@ -67,9 +69,8 @@ impl MessageListener {
     async fn handle_message(&self, msg: &Message) -> Result<()> {
         match msg {
             Message::Message { channel, user, text, ..} => {
-                let ping_handler = PingMessageHandler::new();
-                if ping_handler.matches(&text) {
-                    ping_handler.handle(&channel, &user, &text).await?;
+                if self.ping_handler.matches(&text) {
+                    self.ping_handler.handle(&channel, &user, &text).await?;
                 }
             }
             _ => {}
