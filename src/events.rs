@@ -23,15 +23,15 @@ pub enum Event {
     }
 }
 
-pub struct MessageEvent {
+pub struct Message {
     pub channel: String,
     pub user: String,
     pub text: String,
 }
 
-impl MessageEvent {
+impl Message {
     pub fn new(channel: &str, user: &str, text: &str) -> Self {
-        MessageEvent {
+        Message {
             channel: channel.to_owned(),
             user: user.to_owned(),
             text: text.to_owned(),
