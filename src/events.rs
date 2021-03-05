@@ -22,3 +22,19 @@ pub enum Message {
         user: String,
     }
 }
+
+pub struct MessageEvent {
+    pub channel: String,
+    pub user: String,
+    pub text: String,
+}
+
+impl MessageEvent {
+    pub fn new(channel: &str, user: &str, text: &str) -> Self {
+        MessageEvent {
+            channel: channel.to_owned(),
+            user: user.to_owned(),
+            text: text.to_owned(),
+        }
+    }
+}

@@ -8,14 +8,14 @@ use tokio_tungstenite::tungstenite::Error as WsError;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 
 use slack_client::client::SlackApiClient;
-use slack_client::events::Message;
+use slack_client::events::{Message, MessageEvent};
 use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
 
 #[async_trait]
 trait MessageHandler {
     fn matches(&self, text: &str) -> bool;
-    async fn handle(&self, channel: &str, user: &str, text: &str) -> Result<()>;
+    async fn handle(&self, event: &MessageEvent) -> Result<()>;
 }
 
 struct PingMessageHandler {
@@ -36,10 +36,10 @@ impl MessageHandler for PingMessageHandler {
         self.pattern.is_match(text)
     }
 
-    async fn handle(&self, channel: &str, user: &str, _text: &str) -> Result<()> {
+    async fn handle(&self, event: &MessageEvent) -> Result<()> {
         let client = SlackApiClient::new();
-        let reply = format!("<@{}> pong", user);
-        let request = PostMessageRequest::new(channel, &reply);
+        let reply = format!("<@{}> pong", event.user);
+        let request = PostMessageRequest::new(&event.channel, &reply);
         client.request(&request).await?;
         Ok(())
     }
@@ -69,8 +69,9 @@ impl MessageListener {
     async fn handle_message(&self, msg: &Message) -> Result<()> {
         match msg {
             Message::Message { channel, user, text, ..} => {
+                let event = MessageEvent::new(channel, user, text);
                 if self.ping_handler.matches(&text) {
-                    self.ping_handler.handle(&channel, &user, &text).await?;
+                    self.ping_handler.handle(&event).await?;
                 }
             }
             _ => {}
