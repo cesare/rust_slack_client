@@ -14,7 +14,7 @@ use slack_client::responses::RtmConnect;
 
 #[async_trait]
 trait MessageHandler {
-    fn matches(&self, text: &str) -> bool;
+    fn matches(&self, event: &MessageEvent) -> bool;
     async fn handle(&self, event: &MessageEvent) -> Result<()>;
 }
 
@@ -32,8 +32,8 @@ impl PingMessageHandler {
 
 #[async_trait]
 impl MessageHandler for PingMessageHandler {
-    fn matches(&self, text: &str) -> bool {
-        self.pattern.is_match(text)
+    fn matches(&self, event: &MessageEvent) -> bool {
+        self.pattern.is_match(&event.text)
     }
 
     async fn handle(&self, event: &MessageEvent) -> Result<()> {
@@ -70,7 +70,7 @@ impl MessageListener {
         match msg {
             Message::Message { channel, user, text, ..} => {
                 let event = MessageEvent::new(channel, user, text);
-                if self.ping_handler.matches(&text) {
+                if self.ping_handler.matches(&event) {
                     self.ping_handler.handle(&event).await?;
                 }
             }
