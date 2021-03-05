@@ -15,7 +15,7 @@ async fn wait_for_events(stream: &mut (dyn Stream<Item = Result<Message, WsError
             Message::Text(text) => {
                 let json: Value = serde_json::from_str(&text)?;
                 let original_json = json.clone();
-                if let Ok(msg) = serde_json::from_value::<events::Message>(json) {
+                if let Ok(msg) = serde_json::from_value::<events::Event>(json) {
                     println!("{:?}", msg);
                 } else {
                     println!("{}", original_json);

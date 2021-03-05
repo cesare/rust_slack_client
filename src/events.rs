@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type")]
-pub enum Message {
+pub enum Event {
     #[serde(rename = "hello")]
     Hello {},
 

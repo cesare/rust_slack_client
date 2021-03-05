@@ -8,7 +8,7 @@ use tokio_tungstenite::tungstenite::Error as WsError;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 
 use slack_client::client::SlackApiClient;
-use slack_client::events::{Message, MessageEvent};
+use slack_client::events::{Event, MessageEvent};
 use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
 
@@ -46,12 +46,12 @@ impl MessageHandler for PingMessageHandler {
 }
 
 struct MessageListener {
-    rx: Mutex<Receiver<Message>>,
+    rx: Mutex<Receiver<Event>>,
     ping_handler: PingMessageHandler,
 }
 
 impl MessageListener {
-    fn new(rx: Receiver<Message>) -> Self {
+    fn new(rx: Receiver<Event>) -> Self {
         MessageListener {
             rx: Mutex::new(rx),
             ping_handler: PingMessageHandler::new(),
@@ -66,9 +66,9 @@ impl MessageListener {
         }
     }
 
-    async fn handle_message(&self, msg: &Message) -> Result<()> {
+    async fn handle_message(&self, msg: &Event) -> Result<()> {
         match msg {
-            Message::Message { channel, user, text, ..} => {
+            Event::Message { channel, user, text, ..} => {
                 let event = MessageEvent::new(channel, user, text);
                 if self.ping_handler.matches(&event) {
                     self.ping_handler.handle(&event).await?;
@@ -80,12 +80,12 @@ impl MessageListener {
     }
 }
 
-async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Message>)
+async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Event>)
     where S: Stream<Item = Result<WsMessage, WsError>> + Unpin + Send
 {
     while let Some(Ok(message)) = stream.next().await {
         if let WsMessage::Text(text) = message {
-            if let Ok(msg) = serde_json::from_str::<Message>(&text) {
+            if let Ok(msg) = serde_json::from_str::<Event>(&text) {
                 let _ = tx.send(msg).await;
             }
         }
@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
     let rtm_connect: RtmConnect = client.request(&request).await?;
     println!("{:?}", rtm_connect);
 
-    let (mut tx, rx) = channel::<Message>(100);
+    let (mut tx, rx) = channel::<Event>(100);
     let msg_handle = tokio::spawn(async move {
         MessageListener::new(rx).run().await;
     });
