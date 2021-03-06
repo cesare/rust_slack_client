@@ -28,10 +28,7 @@ impl PingMessageHandler {
             pattern: Regex::new(r"\bping\b").unwrap(),
         }
     }
-}
 
-#[async_trait]
-impl MessageHandler for PingMessageHandler {
     fn matches(&self, message: &Message) -> bool {
         self.pattern.is_match(&message.text)
     }
