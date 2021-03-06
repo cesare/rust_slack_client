@@ -1,5 +1,4 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use futures::stream::{Stream, StreamExt};
 use regex::Regex;
 use tokio::sync::Mutex;
@@ -12,10 +11,9 @@ use slack_client::events::{Event, Message};
 use slack_client::requests::{PostMessageRequest, RtmConnectRequest};
 use slack_client::responses::RtmConnect;
 
-#[async_trait]
 trait MessageHandler {
     fn matches(&self, message: &Message) -> bool;
-    async fn handle(&self, message: &Message) -> Result<()>;
+    fn handle(&self, message: &Message) -> Result<()>;
 }
 
 struct PingMessageHandler {
