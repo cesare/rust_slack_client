@@ -45,14 +45,14 @@ impl MessageHandler for PingMessageHandler {
     }
 }
 
-struct MessageListener {
+struct EventListener {
     rx: Mutex<Receiver<Event>>,
     ping_handler: PingMessageHandler,
 }
 
-impl MessageListener {
+impl EventListener {
     fn new(rx: Receiver<Event>) -> Self {
-        MessageListener {
+        EventListener {
             rx: Mutex::new(rx),
             ping_handler: PingMessageHandler::new(),
         }
@@ -62,11 +62,11 @@ impl MessageListener {
         let mut rx = self.rx.lock().await;
         while let Some(event) = rx.recv().await {
             println!("{:?}", event);
-            let _ = self.handle_message(&event).await;
+            let _ = self.handle_event(&event).await;
         }
     }
 
-    async fn handle_message(&self, event: &Event) -> Result<()> {
+    async fn handle_event(&self, event: &Event) -> Result<()> {
         match event {
             Event::Message { channel, user, text, ..} => {
                 let message = Message::new(channel, user, text);
@@ -102,7 +102,7 @@ async fn main() -> Result<()> {
 
     let (mut tx, rx) = channel::<Event>(100);
     let msg_handle = tokio::spawn(async move {
-        MessageListener::new(rx).run().await;
+        EventListener::new(rx).run().await;
     });
 
     let (mut stream, _response) = tokio_tungstenite::connect_async(rtm_connect.url).await?;
