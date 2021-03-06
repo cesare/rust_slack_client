@@ -14,8 +14,8 @@ use slack_client::responses::RtmConnect;
 
 #[async_trait]
 trait MessageHandler {
-    fn matches(&self, event: &Message) -> bool;
-    async fn handle(&self, event: &Message) -> Result<()>;
+    fn matches(&self, message: &Message) -> bool;
+    async fn handle(&self, message: &Message) -> Result<()>;
 }
 
 struct PingMessageHandler {
@@ -32,14 +32,14 @@ impl PingMessageHandler {
 
 #[async_trait]
 impl MessageHandler for PingMessageHandler {
-    fn matches(&self, event: &Message) -> bool {
-        self.pattern.is_match(&event.text)
+    fn matches(&self, message: &Message) -> bool {
+        self.pattern.is_match(&message.text)
     }
 
-    async fn handle(&self, event: &Message) -> Result<()> {
+    async fn handle(&self, message: &Message) -> Result<()> {
         let client = SlackApiClient::new();
-        let reply = format!("<@{}> pong", event.user);
-        let request = PostMessageRequest::new(&event.channel, &reply);
+        let reply = format!("<@{}> pong", message.user);
+        let request = PostMessageRequest::new(&message.channel, &reply);
         client.request(&request).await?;
         Ok(())
     }
@@ -60,18 +60,18 @@ impl MessageListener {
 
     async fn run(&self) {
         let mut rx = self.rx.lock().await;
-        while let Some(msg) = rx.recv().await {
-            println!("{:?}", msg);
-            let _ = self.handle_message(&msg).await;
+        while let Some(event) = rx.recv().await {
+            println!("{:?}", event);
+            let _ = self.handle_message(&event).await;
         }
     }
 
-    async fn handle_message(&self, msg: &Event) -> Result<()> {
-        match msg {
+    async fn handle_message(&self, event: &Event) -> Result<()> {
+        match event {
             Event::Message { channel, user, text, ..} => {
-                let event = Message::new(channel, user, text);
-                if self.ping_handler.matches(&event) {
-                    self.ping_handler.handle(&event).await?;
+                let message = Message::new(channel, user, text);
+                if self.ping_handler.matches(&message) {
+                    self.ping_handler.handle(&message).await?;
                 }
             }
             _ => {}
@@ -85,8 +85,8 @@ async fn wait_for_messages<S>(stream: &mut S, tx: &mut Sender<Event>)
 {
     while let Some(Ok(message)) = stream.next().await {
         if let WsMessage::Text(text) = message {
-            if let Ok(msg) = serde_json::from_str::<Event>(&text) {
-                let _ = tx.send(msg).await;
+            if let Ok(event) = serde_json::from_str::<Event>(&text) {
+                let _ = tx.send(event).await;
             }
         }
     }
