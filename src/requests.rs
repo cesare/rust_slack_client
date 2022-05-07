@@ -14,6 +14,12 @@ impl AuthTestRequest {
     }
 }
 
+impl Default for AuthTestRequest {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SlackApiRequest for AuthTestRequest {
     fn build(self: &Self) -> Result<Request<Body>> {
         let slack_token = std::env::var("SLACK_TOKEN")?;
@@ -33,6 +39,12 @@ pub struct ListConversationsRequest {
 impl ListConversationsRequest {
     pub fn new() -> Self {
         ListConversationsRequest {}
+    }
+}
+
+impl Default for ListConversationsRequest {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -93,6 +105,12 @@ pub struct RtmConnectRequest {
 impl RtmConnectRequest {
     pub fn new() -> Self {
         RtmConnectRequest {}
+    }
+}
+
+impl Default for RtmConnectRequest {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

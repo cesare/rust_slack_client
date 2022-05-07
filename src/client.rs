@@ -17,6 +17,12 @@ pub struct SlackApiClient {
     http_client: Client<HttpsConnector<HttpConnector>, Body>,
 }
 
+impl Default for SlackApiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SlackApiClient {
     pub fn new() -> Self {
         let https = HttpsConnector::new();
