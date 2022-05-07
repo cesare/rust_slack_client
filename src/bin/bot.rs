@@ -62,14 +62,11 @@ impl EventListener {
     }
 
     async fn handle_event(&self, event: &Event) -> Result<()> {
-        match event {
-            Event::Message { channel, user, text, ..} => {
-                let message = Message::new(channel, user, text);
-                if self.ping_handler.matches(&message) {
-                    self.ping_handler.handle(&message).await?;
-                }
+        if let Event::Message { channel, user, text, ..} = event {
+            let message = Message::new(channel, user, text);
+            if self.ping_handler.matches(&message) {
+                self.ping_handler.handle(&message).await?;
             }
-            _ => {}
         }
         Ok(())
     }
