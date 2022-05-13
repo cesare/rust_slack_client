@@ -7,77 +7,77 @@ pub struct ErrorResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct AuthTest {
-    ok: bool,
-    user: String,
-    user_id: String,
-    team: String,
-    team_id: String,
-    bot_id: String,
-    url: String,
-    is_enterprise_install: bool,
+    pub ok: bool,
+    pub user: String,
+    pub user_id: String,
+    pub team: String,
+    pub team_id: String,
+    pub bot_id: String,
+    pub url: String,
+    pub is_enterprise_install: bool,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Topic {
-    value: String,
-    creator: String,
-    last_set: u32,
+    pub value: String,
+    pub creator: String,
+    pub last_set: u32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Purpose {
-    value: String,
-    creator: String,
-    last_set: u32,
+    pub value: String,
+    pub creator: String,
+    pub last_set: u32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Channel {
-    id: String,
-    name: String,
-    num_members: Option<u32>,
-    is_private: bool,
-    topic: Topic,
-    purpose: Purpose,
+    pub id: String,
+    pub name: String,
+    pub num_members: Option<u32>,
+    pub is_private: bool,
+    pub topic: Topic,
+    pub purpose: Purpose,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Channels {
-    channels: Vec<Channel>,
+    pub channels: Vec<Channel>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PostMessage {
-    channel: String,
-    ts: String,
-    message: BotMessage,
+    pub channel: String,
+    pub ts: String,
+    pub message: BotMessage,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BotMessage {
-    text: String,
-    username: String,
-    bot_id: String,
-    ts: String,
+    pub text: String,
+    pub username: String,
+    pub bot_id: String,
+    pub ts: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Identity {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Team {
-    domain: String,
-    id: String,
-    name: String,
+    pub domain: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct RtmConnect {
     #[serde(rename = "self")]
-    identity: Identity,
-    team: Team,
+    pub identity: Identity,
+    pub team: Team,
     pub url: String,
 }
