@@ -2,7 +2,7 @@ use anyhow::Result;
 use hyper::{Body, Request};
 
 pub trait SlackApiRequest {
-    fn build(self: &Self) -> Result<Request<Body>>;
+    fn build(&self) -> Result<Request<Body>>;
 }
 
 pub struct AuthTestRequest {
@@ -21,7 +21,7 @@ impl Default for AuthTestRequest {
 }
 
 impl SlackApiRequest for AuthTestRequest {
-    fn build(self: &Self) -> Result<Request<Body>> {
+    fn build(&self) -> Result<Request<Body>> {
         let slack_token = std::env::var("SLACK_TOKEN")?;
 
         let request = Request::builder()
@@ -81,7 +81,7 @@ impl PostMessageRequest {
 }
 
 impl SlackApiRequest for PostMessageRequest {
-    fn build(self: &Self) -> Result<Request<Body>> {
+    fn build(&self) -> Result<Request<Body>> {
         let slack_token = std::env::var("SLACK_TOKEN")?;
 
         let query = form_urlencoded::Serializer::new(String::new())
