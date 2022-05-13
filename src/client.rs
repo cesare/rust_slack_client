@@ -28,7 +28,7 @@ impl SlackApiClient {
         let https = HttpsConnector::new();
         let http_client = Client::builder().build::<_, hyper::Body>(https);
         SlackApiClient {
-            http_client: http_client,
+            http_client,
         }
     }
 
